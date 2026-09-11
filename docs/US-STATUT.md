@@ -1,10 +1,10 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-11, `feat/us-09-minio`.
+Inventaire au 2026-09-11, `feat/us-10-contacts`.
 
 ## Merges `develop`
 
-J0–J14, J16–J18, #27 notifications (V18 IF NOT EXISTS). Ancienne #23 ignorée.
+J0–J14, J16–J18, notifications V18, MinIO US-09. Ancienne #23 ignorée.
 
 ## Fait
 
@@ -14,8 +14,8 @@ US-01 à 08, 14–16, 21, 24–28.
 
 | US | Manque |
 |---|---|
-| US-09 | Upload **MinIO** + 3 photos min ; vidéo ok ; pas encore d’UI galerie |
-| US-10 | Révélation coordonnées |
+| US-09 | MinIO + 3 photos ; pas d’UI galerie |
+| US-10 | `GET /contrats/{id}/contacts` après double signature ; pas de masquage vitrine |
 | US-11 | Pénalité résiliation |
 | US-12 | Simulateur caution |
 | US-13 | Caution vs réparations |
