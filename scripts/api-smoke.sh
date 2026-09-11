@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke tests HTTP des APIs (J0 → J11).
+# Smoke tests HTTP des APIs.
 set -euo pipefail
 
 API="${API:-http://localhost:8080}"
@@ -71,9 +71,24 @@ split_body_code "$OUT"
 expect "$CODE" 201 "POST /biens/{id}/unites"
 UNITE_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
+echo "== Publication : 3 photos min"
 OUT=$(req PUT "/api/v1/biens/${BIEN_ID}/unites/${UNITE_ID}/publication" "{\"publie\":true}" "$PRO_TOKEN")
 split_body_code "$OUT"
-expect "$CODE" 200 "PUT publication"
+expect "$CODE" 409 "PUT publication sans photos"
+
+for i in 1 2 3; do
+  OUT=$(req POST "/api/v1/unites/${UNITE_ID}/medias" "{\"url\":\"https://example.com/p${i}.jpg\",\"type\":\"PHOTO\"}" "$PRO_TOKEN")
+  split_body_code "$OUT"
+  expect "$CODE" 201 "POST /unites/{id}/medias PHOTO $i"
+done
+
+OUT=$(req GET "/api/v1/public/annonces/${UNITE_ID}/medias")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /public/annonces/{id}/medias"
+
+OUT=$(req PUT "/api/v1/biens/${BIEN_ID}/unites/${UNITE_ID}/publication" "{\"publie\":true}" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 200 "PUT publication avec 3 photos"
 
 echo "== Visite (avant occupation)"
 CRENEAU=$(python3 -c "from datetime import datetime,timedelta,timezone; print((datetime.now(timezone.utc)+timedelta(days=2)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
