@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-11, branche `feat/j13-admin`.
+Inventaire au 2026-09-11, branche `feat/j14-paiement-en-ligne`.
 Légende : **fait** = API + smoke ; **partiel** = socle présent, critères backlog incomplets ; **non fait**.
 
 ## Fait
@@ -17,7 +17,7 @@ Légende : **fait** = API + smoke ; **partiel** = socle présent, critères back
 | US-08 | RDV visite | Demande publique + confirmation |
 | US-14 | Inscription / login | JWT |
 | US-15 | Reset MDP + 2FA TOTP | |
-| US-16 | Admin plateforme | Bootstrap 1er ADMIN, liste users, statut, grant/revoke rôles |
+| US-16 | Admin plateforme | Bootstrap 1er ADMIN, liste users, statut, rôles |
 | US-21 | Quittance | Numéro généré à l’encaissement |
 | US-24 | Réservation | Anti double-booking basique |
 | US-25 | Publier / dépublier | |
@@ -34,6 +34,7 @@ Légende : **fait** = API + smoke ; **partiel** = socle présent, critères back
 | US-11 | Résiliation ; pas de pénalité calculée |
 | US-12 | Champ caution ; pas de simulateur ni plafond 3 mois |
 | US-13 | EDL ENTREE/SORTIE ; pas de règle caution vs réparations |
+| US-18 | Intention WAVE/OM/CARTE + webhook **mock** ; pas d’agrégateur réel |
 | US-20 | Relances persistées ; pas d’email/SMS réel ni cron |
 | US-23 | Docs KYC ; pas d’espace documentaire global |
 
@@ -41,16 +42,16 @@ Légende : **fait** = API + smoke ; **partiel** = socle présent, critères back
 
 | Prio | US | Titre |
 |---|---|---|
-| 1 | US-18 | Paiement en ligne Mobile Money / carte |
-| 2 | US-19 | Notification temps réel d’un paiement |
-| 3 | US-22 | Signature électronique du contrat |
-| 4 | US-17 | Chiffrement CNI / PII au repos |
-| 5 | US-29 | Supervision ops |
-| 6 | US-30 | i18n |
+| 1 | US-19 | Notification temps réel d’un paiement |
+| 2 | US-22 | Signature électronique du contrat |
+| 3 | US-17 | Chiffrement CNI / PII au repos |
+| 4 | US-29 | Supervision ops |
+| 5 | US-30 | i18n |
 
 ## Hors backlog initial mais livré
 
 - Auth JWT sans Keycloak, refresh tokens
 - Smoke `scripts/api-smoke.sh`
 - Dashboard KPI accueil
-- Bootstrap admin via `ADMIN_BOOTSTRAP_TOKEN` (défaut `dev-admin-bootstrap`)
+- Bootstrap admin
+- Mock checkout `/api/v1/public/paiements/webhook`
