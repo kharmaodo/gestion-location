@@ -153,6 +153,34 @@ OUT=$(req POST "/api/v1/contrats/${CTR_ID}/activation" "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "POST /contrats/{id}/activation"
 
+echo "== Contacts (US-10)"
+OUT=$(req GET "/api/v1/contrats/${CTR_ID}/contacts" "" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /contrats/{id}/contacts avant signature"
+python3 -c "import json,sys; d=json.loads(sys.argv[1]); assert d.get('revele') is False" "$BODY" && echo "OK  contacts masques" || { echo "KO  contacts devraient etre masques"; FAIL=$((FAIL+1)); }
+
+OUT=$(req POST /api/v1/signatures "{\"contratId\":\"$CTR_ID\",\"roleSignataire\":\"PROPRIETAIRE\",\"nomSignataire\":\"Awa Fall\"}" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 201 "POST /signatures PROPRIETAIRE"
+TOK_P=$(echo "$BODY" | python3 -c "import json,sys; print((json.load(sys.stdin).get('lien') or '').rsplit('/',1)[-1])")
+
+OUT=$(req POST /api/v1/signatures "{\"contratId\":\"$CTR_ID\",\"roleSignataire\":\"LOCATAIRE\",\"nomSignataire\":\"Ibra Diop\"}" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 201 "POST /signatures LOCATAIRE"
+TOK_L=$(echo "$BODY" | python3 -c "import json,sys; print((json.load(sys.stdin).get('lien') or '').rsplit('/',1)[-1])")
+
+OUT=$(req POST "/api/v1/public/signatures/${TOK_P}" "{}")
+split_body_code "$OUT"
+expect "$CODE" 200 "POST /public/signatures proprio"
+OUT=$(req POST "/api/v1/public/signatures/${TOK_L}" "{}")
+split_body_code "$OUT"
+expect "$CODE" 200 "POST /public/signatures locataire"
+
+OUT=$(req GET "/api/v1/contrats/${CTR_ID}/contacts" "" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /contrats/{id}/contacts apres signature"
+python3 -c "import json,sys; d=json.loads(sys.argv[1]); assert d.get('revele') is True; assert d.get('locataire',{}).get('email')" "$BODY" && echo "OK  contacts reveles" || { echo "KO  contacts non reveles: $BODY"; FAIL=$((FAIL+1)); }
+
 echo "== Etat des lieux"
 OUT=$(req POST /api/v1/etats-lieux "{\"contratId\":\"$CTR_ID\",\"type\":\"ENTREE\",\"observations\":\"Bon etat\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
