@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke tests HTTP des APIs (J0 → J9).
+# Smoke tests HTTP des APIs (J0 → J10).
 set -euo pipefail
 
 API="${API:-http://localhost:8080}"
@@ -137,6 +137,20 @@ CTR_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).
 OUT=$(req POST "/api/v1/contrats/${CTR_ID}/activation" "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "POST /contrats/{id}/activation"
+
+echo "== Litiges"
+OUT=$(req POST /api/v1/litiges "{\"contratId\":\"$CTR_ID\",\"motif\":\"DEGATS\",\"description\":\"Fuites\"}" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 201 "POST /litiges"
+LIT_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+OUT=$(req GET /api/v1/litiges "" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /litiges"
+if [[ -n "$LIT_ID" ]]; then
+  OUT=$(req POST "/api/v1/litiges/${LIT_ID}/decision" "{\"statut\":\"RESOLU\",\"decision\":\"Repare\"}" "$PRO_TOKEN")
+  split_body_code "$OUT"
+  expect "$CODE" 200 "POST /litiges/{id}/decision"
+fi
 
 echo "== Loyers"
 OUT=$(req POST /api/v1/loyers/generation "" "$PRO_TOKEN")
