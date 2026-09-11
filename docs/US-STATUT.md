@@ -1,32 +1,20 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-11, `feat/j20-i18n`.
+Inventaire au 2026-09-11, `feat/us-09-minio`.
 
-## Merges `develop` (vérifiés)
+## Merges `develop`
 
-| Livré | Contenu |
-|---|---|
-| J0–J8 | Auth JWT, biens, locataires, vitrine, visites |
-| J9–J11 | Avis, litiges, état des lieux |
-| J12 | Médias URLs |
-| J13 | Admin |
-| J14 | Paiement en ligne mock |
-| J16 | Signature lien |
-| J17 | PII AES-GCM |
-| J18 | `/admin/ops` |
-| #27 / V18 | Notifications US-19 |
-
-**Non fusionné (obsolète) :** ancienne #23 `feat/j15-notif-paiement`.
+J0–J14, J16–J18, #27 notifications (V18 IF NOT EXISTS). Ancienne #23 ignorée.
 
 ## Fait
 
-US-01 à 08, 14, 15, 16, 21, 24–28.
+US-01 à 08, 14–16, 21, 24–28.
 
 ## Partiel
 
 | US | Manque |
 |---|---|
-| US-09 | Upload S3, min 3 photos |
+| US-09 | Upload **MinIO** + 3 photos min ; vidéo ok ; pas encore d’UI galerie |
 | US-10 | Révélation coordonnées |
 | US-11 | Pénalité résiliation |
 | US-12 | Simulateur caution |
@@ -38,8 +26,4 @@ US-01 à 08, 14, 15, 16, 21, 24–28.
 | US-22 | Pas de certificat |
 | US-23 | Pas d’espace docs |
 | US-29 | Snapshot sans alerting |
-| US-30 | Catalogues FR/EN/WO via API ; UI pas encore branchée |
-
-## Non fait
-
-Plus aucune US backlog « zéro ». Reste le durcissement des *partiels*.
+| US-30 | Catalogues API, UI non branchée |
