@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke tests HTTP des APIs (J0 → J10).
+# Smoke tests HTTP des APIs (J0 → J11).
 set -euo pipefail
 
 API="${API:-http://localhost:8080}"
@@ -137,6 +137,23 @@ CTR_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).
 OUT=$(req POST "/api/v1/contrats/${CTR_ID}/activation" "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "POST /contrats/{id}/activation"
+
+echo "== Etat des lieux"
+OUT=$(req POST /api/v1/etats-lieux "{\"contratId\":\"$CTR_ID\",\"type\":\"ENTREE\",\"observations\":\"Bon etat\"}" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 201 "POST /etats-lieux ENTREE"
+EDL_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+OUT=$(req GET "/api/v1/etats-lieux?contratId=${CTR_ID}" "" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /etats-lieux"
+if [[ -n "$EDL_ID" ]]; then
+  OUT=$(req POST "/api/v1/etats-lieux/${EDL_ID}/validation" "" "$PRO_TOKEN")
+  split_body_code "$OUT"
+  expect "$CODE" 200 "POST /etats-lieux/{id}/validation"
+fi
+OUT=$(req POST /api/v1/etats-lieux "{\"contratId\":\"$CTR_ID\",\"type\":\"ENTREE\"}" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 409 "POST /etats-lieux doublon ENTREE"
 
 echo "== Litiges"
 OUT=$(req POST /api/v1/litiges "{\"contratId\":\"$CTR_ID\",\"motif\":\"DEGATS\",\"description\":\"Fuites\"}" "$PRO_TOKEN")
