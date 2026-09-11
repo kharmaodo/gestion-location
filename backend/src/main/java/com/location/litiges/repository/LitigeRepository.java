@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface LitigeRepository extends JpaRepository<LitigeEntity, UUID> {
     List<LitigeEntity> findByProprietaireIdOrderByMajLeDesc(UUID proprietaireId);
     Optional<LitigeEntity> findByIdAndProprietaireId(UUID id, UUID proprietaireId);
+    long countByStatut(String statut);
 }
