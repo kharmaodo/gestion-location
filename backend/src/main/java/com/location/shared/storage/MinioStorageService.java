@@ -7,10 +7,13 @@ import io.minio.PutObjectArgs;
 import io.minio.SetBucketPolicyArgs;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MinioStorageService {
+    private static final Logger log = LoggerFactory.getLogger(MinioStorageService.class);
     private final MinioProperties props;
     private final MinioClient client;
 
@@ -34,7 +37,7 @@ public class MinioStorageService {
                     """.formatted(props.getBucket());
             client.setBucketPolicy(SetBucketPolicyArgs.builder().bucket(props.getBucket()).config(policy).build());
         } catch (Exception e) {
-            throw new IllegalStateException("MinIO indisponible sur " + props.getEndpoint(), e);
+            log.warn("MinIO non joignable ({}). Lancer: docker compose -f docker-compose.dev.yml up -d minio", props.getEndpoint());
         }
     }
 
@@ -48,7 +51,7 @@ public class MinioStorageService {
                     .build());
             return props.getPublicUrl().replaceAll("/$", "") + "/" + props.getBucket() + "/" + objectName;
         } catch (Exception e) {
-            throw new IllegalStateException("upload MinIO impossible", e);
+            throw new IllegalStateException("upload MinIO impossible — docker compose up -d minio", e);
         }
     }
 }
