@@ -41,4 +41,6 @@ public class UtilisateurEntity {
     public void setStatut(String statut) { this.statut = statut; }
     public boolean isTwoFactorActive() { return twoFactorActive; }
     public void setTwoFactorActive(boolean twoFactorActive) { this.twoFactorActive = twoFactorActive; }
+    public String getTwoFactorSecret() { return twoFactorSecret; }
+    public void setTwoFactorSecret(String twoFactorSecret) { this.twoFactorSecret = twoFactorSecret; }
 }
