@@ -9,6 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UniteLocativeRepository extends JpaRepository<UniteLocativeEntity, UUID> {
     List<UniteLocativeEntity> findByBienIdOrderByLibelleAsc(UUID bienId);
     Optional<UniteLocativeEntity> findByIdAndBienId(UUID id, UUID bienId);
-    long countByBienId(UUID bienId);
-    long countByBienIdAndStatut(UUID bienId, String statut);
+    List<UniteLocativeEntity> findByPublieTrue();
 }
