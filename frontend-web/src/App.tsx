@@ -4,12 +4,16 @@ import { AnnonceDetailPage } from "./pages/AnnonceDetailPage";
 import { AnnoncesPage } from "./pages/AnnoncesPage";
 import { BienDetailPage } from "./pages/BienDetailPage";
 import { BiensPage } from "./pages/BiensPage";
+import { ContratDetailPage } from "./pages/ContratDetailPage";
+import { ContratsPage } from "./pages/ContratsPage";
 import { DossierDetailPage } from "./pages/DossierDetailPage";
 import { ForgotPage } from "./pages/ForgotPage";
 import { HomePage } from "./pages/HomePage";
 import { LocatairesPage } from "./pages/LocatairesPage";
 import { LoginPage } from "./pages/LoginPage";
+import { LoyersPage } from "./pages/LoyersPage";
 import { NouveauBienPage } from "./pages/NouveauBienPage";
+import { NouveauContratPage } from "./pages/NouveauContratPage";
 import { NouveauDossierPage } from "./pages/NouveauDossierPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ReservationsPage } from "./pages/ReservationsPage";
@@ -38,6 +42,10 @@ export default function App() {
       <Route path="/locataires/nouveau" element={<PrivateRoute><NouveauDossierPage /></PrivateRoute>} />
       <Route path="/locataires/:id" element={<PrivateRoute><DossierDetailPage /></PrivateRoute>} />
       <Route path="/reservations" element={<PrivateRoute><ReservationsPage /></PrivateRoute>} />
+      <Route path="/contrats" element={<PrivateRoute><ContratsPage /></PrivateRoute>} />
+      <Route path="/contrats/nouveau" element={<PrivateRoute><NouveauContratPage /></PrivateRoute>} />
+      <Route path="/contrats/:id" element={<PrivateRoute><ContratDetailPage /></PrivateRoute>} />
+      <Route path="/loyers" element={<PrivateRoute><LoyersPage /></PrivateRoute>} />
     </Routes>
   );
 }
