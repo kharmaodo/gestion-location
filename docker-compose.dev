@@ -1,0 +1,299 @@
+version: "3.9"
+
+# Environnement de DEV — Plateforme de Gestion de Location
+# Démarrage : docker compose -f docker-compose.dev.yml up -d
+# Arrêt + reset données : docker compose -f docker-compose.dev.yml down -v
+
+networks:
+  location_dev_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  redpanda_data:
+  keycloak_data:
+  meilisearch_data:
+  minio_data:
+  grafana_data:
+  prometheus_data:
+
+services:
+
+  # ---------------------------------------------------------------
+  # BASE DE DONNEES
+  # ---------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: location_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-location_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-location_pwd}
+      POSTGRES_DB: ${POSTGRES_DB:-location_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-location_user} -d ${POSTGRES_DB:-location_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [location_dev_net]
+
+  adminer:
+    image: adminer
+    container_name: location_adminer
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # CACHE / PUB-SUB TEMPS REEL
+  # ---------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: location_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # EVENEMENTS / MESSAGING (API-compatible Kafka)
+  # ---------------------------------------------------------------
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: location_redpanda
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=512M
+      - --overprovisioned
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+    ports:
+      - "9092:9092"
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [location_dev_net]
+
+  redpanda-console:
+    image: redpandadata/console:latest
+    container_name: location_redpanda_console
+    restart: unless-stopped
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    ports:
+      - "8090:8080"
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # AUTHENTIFICATION
+  # ---------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: location_keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: dev-file
+    ports:
+      - "8081:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # RECHERCHE DE BIENS
+  # ---------------------------------------------------------------
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    container_name: location_meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev_master_key_change_me}
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # STOCKAGE FICHIERS (S3-compatible)
+  # ---------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: location_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # SANDBOX EMAIL (remplace SendGrid/Mailgun en dev)
+  # ---------------------------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: location_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # UI web
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # SANDBOX APIs EXTERNES (Mobile Money, SMS, signature électronique)
+  # ---------------------------------------------------------------
+  wiremock:
+    image: wiremock/wiremock:latest
+    container_name: location_wiremock
+    restart: unless-stopped
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./mocks/wiremock:/home/wiremock
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # OBSERVABILITE
+  # ---------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: location_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks: [location_dev_net]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: location_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks: [location_dev_net]
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: location_jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks: [location_dev_net]
+
+  # ---------------------------------------------------------------
+  # APPLICATION (build local)
+  # ---------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: location_backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-location_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-location_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-location_pwd}
+      SPRING_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/location
+      MEILISEARCH_HOST: http://meilisearch:7700
+      S3_ENDPOINT: http://minio:9000
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      MOBILE_MONEY_API_URL: http://wiremock:8080
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks: [location_dev_net]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: location_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+      VITE_KEYCLOAK_URL: http://localhost:8081
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks: [location_dev_net]
