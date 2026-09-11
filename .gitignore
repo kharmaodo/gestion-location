@@ -1,0 +1,11 @@
+.env
+.idea/
+.vscode/
+*.iml
+target/
+node_modules/
+dist/
+.DS_Store
+backend/.mvn/wrapper/maven-wrapper.jar
+frontend-web/dist
+*.log
