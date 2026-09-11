@@ -18,10 +18,10 @@ class AuthServiceTest {
     @Test
     void registerThenLogin() {
         TokenResponse created = authService.register(new RegisterRequest(
-                "PROPRIETAIRE", "owner@test.sn", null, "Motdepasse1", "Awa", "Fall", true));
+                "PROPRIETAIRE", "owner2@test.sn", null, "Motdepasse1", "Awa", "Fall", true));
         assertThat(created.accessToken()).isNotBlank();
-        assertThat(created.roles()).contains("PROPRIETAIRE");
-        TokenResponse login = authService.login(new LoginRequest("owner@test.sn", "Motdepasse1"));
+        assertThat(created.requiresTwoFactor()).isFalse();
+        TokenResponse login = authService.login(new LoginRequest("owner2@test.sn", "Motdepasse1", null));
         assertThat(login.userId()).isEqualTo(created.userId());
     }
 }

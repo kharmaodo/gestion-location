@@ -28,10 +28,31 @@ public class JwtService {
                 .subject(subject)
                 .claim("uid", userId.toString())
                 .claim("roles", roles)
+                .claim("typ", "access")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
                 .signWith(key)
                 .compact();
+    }
+
+    public String createPending2faToken(UUID userId) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("uid", userId.toString())
+                .claim("typ", "2fa_pending")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusSeconds(300)))
+                .signWith(key)
+                .compact();
+    }
+
+    public UUID requirePending2fa(String token) {
+        Claims claims = parse(token);
+        if (!"2fa_pending".equals(claims.get("typ", String.class))) {
+            throw new IllegalArgumentException("token 2FA invalide");
+        }
+        return UUID.fromString(claims.get("uid", String.class));
     }
 
     public Claims parse(String token) {
