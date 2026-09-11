@@ -12,17 +12,20 @@ export function HomePage() {
     try { await api.logout(); } finally { clearSession(); navigate("/connexion"); }
   }
   if (!me) return <p className="p-8">Chargement...</p>;
+  const proprio = me.roles.includes("PROPRIETAIRE");
   return (
     <main className="mx-auto max-w-3xl p-8">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Espace {me.roles.join(", ")}</h1>
         <div className="flex gap-3 text-sm">
+          {proprio && <Link className="rounded-md border px-3 py-1" to="/biens">Mes biens</Link>}
           <Link className="rounded-md border px-3 py-1" to="/securite">Securite</Link>
           <button className="rounded-md border px-3 py-1" onClick={logout}>Deconnexion</button>
         </div>
       </header>
       <section className="rounded-lg bg-white p-6 shadow">
         <p>Bonjour {me.prenom ?? me.email ?? "utilisateur"}.</p>
+        {proprio && <p className="mt-2 text-sm text-slate-600">Gerez votre parc depuis Mes biens.</p>}
       </section>
     </main>
   );
