@@ -11,6 +11,7 @@ import { ForgotPage } from "./pages/ForgotPage";
 import { HomePage } from "./pages/HomePage";
 import { LocatairesPage } from "./pages/LocatairesPage";
 import { LoginPage } from "./pages/LoginPage";
+import { LoyersPage } from "./pages/LoyersPage";
 import { NouveauBienPage } from "./pages/NouveauBienPage";
 import { NouveauContratPage } from "./pages/NouveauContratPage";
 import { NouveauDossierPage } from "./pages/NouveauDossierPage";
@@ -44,6 +45,7 @@ export default function App() {
       <Route path="/contrats" element={<PrivateRoute><ContratsPage /></PrivateRoute>} />
       <Route path="/contrats/nouveau" element={<PrivateRoute><NouveauContratPage /></PrivateRoute>} />
       <Route path="/contrats/:id" element={<PrivateRoute><ContratDetailPage /></PrivateRoute>} />
+      <Route path="/loyers" element={<PrivateRoute><LoyersPage /></PrivateRoute>} />
     </Routes>
   );
 }
