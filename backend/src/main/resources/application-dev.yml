@@ -17,3 +17,5 @@ app:
   mail:
     from: noreply@gestion-location.local
     frontend-url: http://localhost:5173
+  admin:
+    bootstrap-token: ${ADMIN_BOOTSTRAP_TOKEN:dev-admin-bootstrap}
