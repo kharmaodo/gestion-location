@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-11, branche `feat/j14-paiement-en-ligne`.
+Inventaire au 2026-09-11, branche `feat/j16-signature`.
 Légende : **fait** = API + smoke ; **partiel** = socle présent, critères backlog incomplets ; **non fait**.
 
 ## Fait
@@ -34,24 +34,24 @@ Légende : **fait** = API + smoke ; **partiel** = socle présent, critères back
 | US-11 | Résiliation ; pas de pénalité calculée |
 | US-12 | Champ caution ; pas de simulateur ni plafond 3 mois |
 | US-13 | EDL ENTREE/SORTIE ; pas de règle caution vs réparations |
-| US-18 | Intention WAVE/OM/CARTE + webhook **mock** ; pas d’agrégateur réel |
+| US-18 | Intention WAVE/OM/CARTE + webhook mock ; pas d’agrégateur réel |
+| US-19 | Inbox notif (branche j15) ; pas de SSE/push |
 | US-20 | Relances persistées ; pas d’email/SMS réel ni cron |
+| US-22 | Lien unique + `POST` public de signature ; pas de certificat qualifié / PDF signé |
 | US-23 | Docs KYC ; pas d’espace documentaire global |
 
 ## Non fait (priorité naturelle suivante)
 
 | Prio | US | Titre |
 |---|---|---|
-| 1 | US-19 | Notification temps réel d’un paiement |
-| 2 | US-22 | Signature électronique du contrat |
-| 3 | US-17 | Chiffrement CNI / PII au repos |
-| 4 | US-29 | Supervision ops |
-| 5 | US-30 | i18n |
+| 1 | US-17 | Chiffrement CNI / PII au repos |
+| 2 | US-29 | Supervision ops |
+| 3 | US-30 | i18n |
 
 ## Hors backlog initial mais livré
 
-- Auth JWT sans Keycloak, refresh tokens
+- Auth JWT sans Keycloak
 - Smoke `scripts/api-smoke.sh`
-- Dashboard KPI accueil
+- Dashboard KPI
 - Bootstrap admin
-- Mock checkout `/api/v1/public/paiements/webhook`
+- Mock paiement en ligne
