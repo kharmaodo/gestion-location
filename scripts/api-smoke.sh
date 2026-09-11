@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Smoke tests HTTP des APIs (J0 → J7).
-# Prérequis : backend sur $API (défaut http://localhost:8080), jq ou python3.
+# Smoke tests HTTP des APIs (J0 → J8).
 set -euo pipefail
 
 API="${API:-http://localhost:8080}"
@@ -9,8 +8,6 @@ PRO_EMAIL="proprio.smoke.${STAMP}@test.sn"
 LOC_EMAIL="locataire.smoke.${STAMP}@test.sn"
 PWD="Motdepasse1"
 FAIL=0
-
-json() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1]))" "$1"; }
 
 expect() {
   local code="$1" want="$2" label="$3"
@@ -44,8 +41,6 @@ echo "== Register proprietaire"
 OUT=$(req POST /api/v1/auth/register "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$PRO_EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall\",\"consentementRgpd\":true}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /auth/register proprio"
-PRO_TOKEN=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
-PRO_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('userId',''))")
 
 echo "== Login proprio"
 OUT=$(req POST /api/v1/auth/login "{\"identifiant\":\"$PRO_EMAIL\",\"motDePasse\":\"$PWD\"}")
@@ -79,6 +74,23 @@ UNITE_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin
 OUT=$(req PUT "/api/v1/biens/${BIEN_ID}/unites/${UNITE_ID}/publication" "{\"publie\":true}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "PUT publication"
+
+echo "== Visite (avant occupation)"
+CRENEAU=$(python3 -c "from datetime import datetime,timedelta,timezone; print((datetime.now(timezone.utc)+timedelta(days=2)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+OUT=$(req POST /api/v1/public/visites "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ibra\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"creneau\":\"$CRENEAU\"}")
+split_body_code "$OUT"
+expect "$CODE" 201 "POST /public/visites"
+VIS_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+
+OUT=$(req GET /api/v1/visites "" "$PRO_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /visites"
+
+if [[ -n "$VIS_ID" ]]; then
+  OUT=$(req POST "/api/v1/visites/${VIS_ID}/statut" "{\"statut\":\"CONFIRMEE\"}" "$PRO_TOKEN")
+  split_body_code "$OUT"
+  expect "$CODE" 200 "POST /visites/{id}/statut"
+fi
 
 echo "== Vitrine publique"
 OUT=$(req GET "/api/v1/public/annonces?ville=Dakar")
