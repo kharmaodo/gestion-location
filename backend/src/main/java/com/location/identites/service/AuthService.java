@@ -4,16 +4,20 @@ import com.location.identites.dto.LoginRequest;
 import com.location.identites.dto.MeResponse;
 import com.location.identites.dto.RegisterRequest;
 import com.location.identites.dto.TokenResponse;
+import com.location.identites.dto.TwoFactorSetupResponse;
 import com.location.identites.entity.ConsentementEntity;
 import com.location.identites.entity.RefreshTokenEntity;
+import com.location.identites.entity.ResetPasswordEntity;
 import com.location.identites.entity.UtilisateurEntity;
 import com.location.identites.entity.UtilisateurRoleEntity;
 import com.location.identites.repository.ConsentementRepository;
 import com.location.identites.repository.RefreshTokenRepository;
+import com.location.identites.repository.ResetPasswordRepository;
 import com.location.identites.repository.UtilisateurRepository;
 import com.location.identites.repository.UtilisateurRoleRepository;
 import com.location.shared.exception.ApiException;
 import com.location.shared.security.JwtService;
+import com.location.shared.security.TotpService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -34,22 +38,31 @@ public class AuthService {
     private final UtilisateurRoleRepository roles;
     private final ConsentementRepository consentements;
     private final RefreshTokenRepository refreshTokens;
+    private final ResetPasswordRepository resetTokens;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
+    private final TotpService totpService;
+    private final MailService mailService;
 
     public AuthService(
             UtilisateurRepository utilisateurs,
             UtilisateurRoleRepository roles,
             ConsentementRepository consentements,
             RefreshTokenRepository refreshTokens,
+            ResetPasswordRepository resetTokens,
             PasswordEncoder encoder,
-            JwtService jwtService) {
+            JwtService jwtService,
+            TotpService totpService,
+            MailService mailService) {
         this.utilisateurs = utilisateurs;
         this.roles = roles;
         this.consentements = consentements;
         this.refreshTokens = refreshTokens;
+        this.resetTokens = resetTokens;
         this.encoder = encoder;
         this.jwtService = jwtService;
+        this.totpService = totpService;
+        this.mailService = mailService;
     }
 
     @Transactional
@@ -101,6 +114,30 @@ public class AuthService {
         if (!"ACTIF".equals(user.getStatut())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Compte inactif");
         }
+        if (user.isTwoFactorActive()) {
+            if (request.otp() == null || request.otp().isBlank()) {
+                return TokenResponse.pending2fa(jwtService.createPending2faToken(user.getId()));
+            }
+            if (!totpService.verify(user.getTwoFactorSecret(), request.otp())) {
+                throw new ApiException(HttpStatus.UNAUTHORIZED, "Code 2FA invalide");
+            }
+        }
+        return issueTokens(user);
+    }
+
+    @Transactional
+    public TokenResponse verifyLogin2fa(String pendingToken, String code) {
+        UUID userId;
+        try {
+            userId = jwtService.requirePending2fa(pendingToken);
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Session 2FA expiree");
+        }
+        UtilisateurEntity user = utilisateurs.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Utilisateur introuvable"));
+        if (!totpService.verify(user.getTwoFactorSecret(), code)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Code 2FA invalide");
+        }
         return issueTokens(user);
     }
 
@@ -136,6 +173,71 @@ public class AuthService {
         return new MeResponse(user.getId(), user.getEmail(), user.getTelephone(), user.getPrenom(), user.getNom(), roleNames);
     }
 
+    @Transactional
+    public void forgotPassword(String identifiant) {
+        utilisateurs.findByEmail(identifiant).or(() -> utilisateurs.findByTelephone(identifiant)).ifPresent(user -> {
+            String raw = UUID.randomUUID() + "." + UUID.randomUUID();
+            ResetPasswordEntity token = new ResetPasswordEntity();
+            token.setId(UUID.randomUUID());
+            token.setUtilisateurId(user.getId());
+            token.setTokenHash(sha256(raw));
+            token.setExpireLe(Instant.now().plusSeconds(3600));
+            token.setUtilise(false);
+            resetTokens.save(token);
+            mailService.sendResetPassword(user.getEmail() != null ? user.getEmail() : identifiant, raw);
+        });
+    }
+
+    @Transactional
+    public void resetPassword(String rawToken, String nouveau) {
+        ResetPasswordEntity token = resetTokens.findByTokenHashAndUtiliseFalse(sha256(rawToken))
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Lien invalide ou expire"));
+        if (token.getExpireLe().isBefore(Instant.now())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Lien invalide ou expire");
+        }
+        UtilisateurEntity user = utilisateurs.findById(token.getUtilisateurId())
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Lien invalide ou expire"));
+        user.setMotDePasseHash(encoder.encode(nouveau));
+        utilisateurs.save(user);
+        token.setUtilise(true);
+        resetTokens.save(token);
+    }
+
+    @Transactional
+    public TwoFactorSetupResponse setup2fa(UUID userId) {
+        UtilisateurEntity user = utilisateurs.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+        String secret = totpService.generateSecret();
+        user.setTwoFactorSecret(secret);
+        user.setTwoFactorActive(false);
+        utilisateurs.save(user);
+        String account = user.getEmail() != null ? user.getEmail() : user.getTelephone();
+        return new TwoFactorSetupResponse(secret, totpService.otpauthUrl("GestionLocation", account, secret));
+    }
+
+    @Transactional
+    public void enable2fa(UUID userId, String code) {
+        UtilisateurEntity user = utilisateurs.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+        if (user.getTwoFactorSecret() == null || !totpService.verify(user.getTwoFactorSecret(), code)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Code 2FA invalide");
+        }
+        user.setTwoFactorActive(true);
+        utilisateurs.save(user);
+    }
+
+    @Transactional
+    public void disable2fa(UUID userId, String code) {
+        UtilisateurEntity user = utilisateurs.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+        if (!totpService.verify(user.getTwoFactorSecret(), code)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Code 2FA invalide");
+        }
+        user.setTwoFactorActive(false);
+        user.setTwoFactorSecret(null);
+        utilisateurs.save(user);
+    }
+
     private TokenResponse issueTokens(UtilisateurEntity user) {
         List<String> roleNames = roles.findByUtilisateurId(user.getId()).stream()
                 .map(UtilisateurRoleEntity::getRole).toList();
@@ -149,7 +251,7 @@ public class AuthService {
         refresh.setExpireLe(jwtService.refreshExpiry());
         refresh.setRevoque(false);
         refreshTokens.save(refresh);
-        return new TokenResponse(access, refreshRaw, jwtService.accessExpiry(), user.getId(), roleNames);
+        return TokenResponse.tokens(access, refreshRaw, jwtService.accessExpiry(), user.getId(), roleNames);
     }
 
     private UtilisateurEntity findByIdentifiant(String identifiant) {

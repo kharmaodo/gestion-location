@@ -29,13 +29,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = jwtService.parse(header.substring(7));
-                String uid = claims.get("uid", String.class);
-                @SuppressWarnings("unchecked")
-                List<String> roles = claims.get("roles", List.class);
-                Collection<SimpleGrantedAuthority> authorities = (roles == null ? List.<String>of() : roles)
-                        .stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r)).collect(Collectors.toList());
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken(uid, null, authorities));
+                if (!"2fa_pending".equals(claims.get("typ", String.class))) {
+                    String uid = claims.get("uid", String.class);
+                    @SuppressWarnings("unchecked")
+                    List<String> roles = claims.get("roles", List.class);
+                    Collection<SimpleGrantedAuthority> authorities = (roles == null ? List.<String>of() : roles)
+                            .stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r)).collect(Collectors.toList());
+                    SecurityContextHolder.getContext().setAuthentication(
+                            new UsernamePasswordAuthenticationToken(uid, null, authorities));
+                }
             } catch (JwtException | IllegalArgumentException ignored) {
                 SecurityContextHolder.clearContext();
             }
