@@ -21,9 +21,9 @@ public class UniteLocativeEntity {
     @Column(nullable = false) private BigDecimal loyer;
     @Column(nullable = false) private String devise = "XOF";
     @Column(nullable = false) private String periodicite = "MENSUEL";
-    @Column(name = "jour_echeance") private Integer jourEcheance;
-    @Column(nullable = false) private String statut = "LIBRE";
+    @Column(name = "jour_echeance", columnDefinition = "smallint") private Short jourEcheance;
     @Column(nullable = false) private boolean publie;
+    @Column(nullable = false) private String statut = "LIBRE";
     @Column(name = "cree_le", nullable = false) private Instant creeLe = Instant.now();
     @Column(name = "maj_le", nullable = false) private Instant majLe = Instant.now();
     @Version private Long version;
@@ -45,8 +45,10 @@ public class UniteLocativeEntity {
     public String getDevise() { return devise; }
     public String getPeriodicite() { return periodicite; }
     public void setPeriodicite(String periodicite) { this.periodicite = periodicite; }
-    public Integer getJourEcheance() { return jourEcheance; }
-    public void setJourEcheance(Integer jourEcheance) { this.jourEcheance = jourEcheance; }
+    public Integer getJourEcheance() { return jourEcheance == null ? null : jourEcheance.intValue(); }
+    public void setJourEcheance(Integer jourEcheance) {
+        this.jourEcheance = jourEcheance == null ? null : jourEcheance.shortValue();
+    }
     public String getStatut() { return statut; }
     public void setStatut(String statut) { this.statut = statut; }
     public boolean isPublie() { return publie; }
