@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MediaRepository extends JpaRepository<MediaEntity, UUID> {
     List<MediaEntity> findByUniteIdOrderByPositionAsc(UUID uniteId);
     long countByUniteId(UUID uniteId);
+    long countByUniteIdAndType(UUID uniteId, String type);
 }
