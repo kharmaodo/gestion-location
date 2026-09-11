@@ -6,6 +6,10 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 20MB
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:1025}
@@ -21,3 +25,9 @@ app:
     bootstrap-token: ${ADMIN_BOOTSTRAP_TOKEN:dev-admin-bootstrap}
   pii:
     key: ${APP_PII_KEY:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ROOT_USER:minio_admin}
+    secret-key: ${MINIO_ROOT_PASSWORD:minio_password}
+    bucket: location-medias
+    public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
