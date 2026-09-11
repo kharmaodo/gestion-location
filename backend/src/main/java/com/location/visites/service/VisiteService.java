@@ -35,7 +35,7 @@ public class VisiteService {
     public VisiteResponse demander(VisiteRequest req) {
         UniteLocativeEntity u = unites.findById(req.uniteId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unite introuvable"));
-        if (!Boolean.TRUE.equals(u.getPublie()) || !"LIBRE".equals(u.getStatut())) {
+        if (!u.isPublie() || !"LIBRE".equals(u.getStatut())) {
             throw new ApiException(HttpStatus.CONFLICT, "visite impossible sur cette unite");
         }
         if (req.creneau().isBefore(Instant.now())) {
