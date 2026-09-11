@@ -4,31 +4,42 @@ Plateforme de gestion locative modulaire pour propriétaires, locataires et pros
 
 ## Stack validée
 
-- Backend : Java 21, Spring Boot 3, Spring MVC et Spring Data JPA
-- Base de données : PostgreSQL
-- Authentification : Keycloak avec OIDC/OAuth2
-- Frontend : React, TypeScript, TailwindCSS et Vite
+- Backend : Java 21, Spring Boot 3.3, Spring MVC, Spring Data JPA, Spring Security
+- Authentification : **JWT applicatif** (access + refresh), sans Keycloak
+- Base de données : PostgreSQL 16 + Flyway
+- Frontend : React 18, TypeScript, TailwindCSS, Vite
 - Événements : Kafka en production, Redpanda en développement
 - Cache et temps réel : Redis et WebSocket/STOMP
 - Recherche : Meilisearch
 - Stockage : S3 en production, MinIO en développement
 
-## Coordonnées Maven
+## Démarrage Dev
 
-```text
-io.github.kharmaodo:gestion-location-backend:0.1.0-SNAPSHOT
+```bash
+cp .env.example .env
+docker compose -f docker-compose.dev.yml up -d postgres redis
+cd backend && ./mvnw spring-boot:run
+cd frontend-web && npm install && npm run dev
 ```
 
-## Organisation cible
+API : http://localhost:8080  
+Web : http://localhost:5173  
+Swagger : http://localhost:8080/swagger-ui.html
+
+## Workflow Git
+
+Les features vivent sur `feat/<jalon>-<sujet>`.  
+`develop` n'est mis à jour qu'après validation explicite (PR).  
+Ne pas pousser directement sur `develop` / `main`.
+
+## Organisation
 
 ```text
 gestion-location/
 ├── backend/
 ├── frontend-web/
-├── mobile/
-├── contracts/
-├── infrastructure/
-└── docs/
+├── docs/
+├── backlog/
+├── design/
+└── docker-compose.dev.yml
 ```
-
-Le backend démarre sous forme de monolithe modulaire organisé par bounded contexts, sans Spring Modulith.
