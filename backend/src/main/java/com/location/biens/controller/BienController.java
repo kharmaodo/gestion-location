@@ -3,6 +3,7 @@ package com.location.biens.controller;
 import com.location.biens.dto.BienRequest;
 import com.location.biens.dto.BienResponse;
 import com.location.biens.dto.PeriodiciteRequest;
+import com.location.biens.dto.PublicationRequest;
 import com.location.biens.dto.UniteRequest;
 import com.location.biens.dto.UniteResponse;
 import com.location.biens.service.BienService;
@@ -82,6 +83,15 @@ public class BienController {
             @PathVariable UUID uniteId,
             @Valid @RequestBody PeriodiciteRequest request) {
         return bienService.periodicite(uid(auth), id, uniteId, request);
+    }
+
+    @PutMapping("/{id}/unites/{uniteId}/publication")
+    public UniteResponse publication(
+            Authentication auth,
+            @PathVariable UUID id,
+            @PathVariable UUID uniteId,
+            @RequestBody PublicationRequest request) {
+        return bienService.publier(uid(auth), id, uniteId, request.publie());
     }
 
     private static UUID uid(Authentication auth) {
