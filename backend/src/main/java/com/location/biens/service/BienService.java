@@ -116,6 +116,17 @@ public class BienService {
         return toUnite(u);
     }
 
+    @Transactional
+    public UniteResponse publier(UUID proprietaireId, UUID bienId, UUID uniteId, boolean publie) {
+        owned(proprietaireId, bienId);
+        UniteLocativeEntity u = unites.findByIdAndBienId(uniteId, bienId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unite introuvable"));
+        u.setPublie(publie);
+        u.setMajLe(Instant.now());
+        unites.save(u);
+        return toUnite(u);
+    }
+
     private void apply(BienImmobilierEntity e, BienRequest req) {
         e.setDesignation(req.designation());
         e.setType(req.type().toUpperCase());
