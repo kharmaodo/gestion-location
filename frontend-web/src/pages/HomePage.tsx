@@ -49,6 +49,7 @@ export function HomePage() {
           {proprio && <Link className="rounded-md border px-3 py-1" to="/reservations">Reservations</Link>}
           {proprio && <Link className="rounded-md border px-3 py-1" to="/contrats">Contrats</Link>}
           {proprio && <Link className="rounded-md border px-3 py-1" to="/loyers">Loyers</Link>}
+          <Link className="rounded-md border px-3 py-1" to="/messages">Messages</Link>
           <Link className="rounded-md border px-3 py-1" to="/securite">Securite</Link>
           <button className="rounded-md border px-3 py-1" onClick={logout}>Deconnexion</button>
         </div>
