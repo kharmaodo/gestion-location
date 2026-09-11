@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SignatureRepository extends JpaRepository<SignatureEntity, UUID> {
     List<SignatureEntity> findByContratIdOrderByCreeLeAsc(UUID contratId);
     Optional<SignatureEntity> findByTokenHash(String tokenHash);
+    long countByStatut(String statut);
 }
