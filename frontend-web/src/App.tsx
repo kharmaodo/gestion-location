@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { getAccessToken } from "./api";
+import { AnnonceDetailPage } from "./pages/AnnonceDetailPage";
+import { AnnoncesPage } from "./pages/AnnoncesPage";
 import { BienDetailPage } from "./pages/BienDetailPage";
 import { BiensPage } from "./pages/BiensPage";
 import { DossierDetailPage } from "./pages/DossierDetailPage";
@@ -10,6 +12,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { NouveauBienPage } from "./pages/NouveauBienPage";
 import { NouveauDossierPage } from "./pages/NouveauDossierPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ReservationsPage } from "./pages/ReservationsPage";
 import { ResetPage } from "./pages/ResetPage";
 import { SecurityPage } from "./pages/SecurityPage";
 
@@ -24,6 +27,8 @@ export default function App() {
       <Route path="/inscription" element={<RegisterPage />} />
       <Route path="/mot-de-passe-oublie" element={<ForgotPage />} />
       <Route path="/reset-mot-de-passe" element={<ResetPage />} />
+      <Route path="/annonces" element={<AnnoncesPage />} />
+      <Route path="/annonces/:id" element={<AnnonceDetailPage />} />
       <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
       <Route path="/securite" element={<PrivateRoute><SecurityPage /></PrivateRoute>} />
       <Route path="/biens" element={<PrivateRoute><BiensPage /></PrivateRoute>} />
@@ -32,6 +37,7 @@ export default function App() {
       <Route path="/locataires" element={<PrivateRoute><LocatairesPage /></PrivateRoute>} />
       <Route path="/locataires/nouveau" element={<PrivateRoute><NouveauDossierPage /></PrivateRoute>} />
       <Route path="/locataires/:id" element={<PrivateRoute><DossierDetailPage /></PrivateRoute>} />
+      <Route path="/reservations" element={<PrivateRoute><ReservationsPage /></PrivateRoute>} />
     </Routes>
   );
 }

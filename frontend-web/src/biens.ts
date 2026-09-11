@@ -56,4 +56,9 @@ export const biensApi = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
+  publier: (bienId: string, uniteId: string, publie: boolean) =>
+    req<Unite>(`/api/v1/biens/${bienId}/unites/${uniteId}/publication`, {
+      method: "PUT",
+      body: JSON.stringify({ publie }),
+    }),
 };

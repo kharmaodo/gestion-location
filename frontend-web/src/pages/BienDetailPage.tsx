@@ -38,6 +38,16 @@ export function BienDetailPage() {
     }
   }
 
+  async function togglePub(uniteId: string, publie: boolean) {
+    if (!id) return;
+    try {
+      await biensApi.publier(id, uniteId, publie);
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    }
+  }
+
   if (!bien) return <p className="p-8">{error ?? "Chargement..."}</p>;
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -53,7 +63,7 @@ export function BienDetailPage() {
                 <p className="font-medium">{u.libelle}</p>
                 <p className="text-sm text-slate-600">{u.type} · {u.loyer} {u.devise} · {u.meuble ? "meuble" : "non meuble"}</p>
               </div>
-              <span className="text-sm">{u.statut}</span>
+              <span className="text-sm">{u.statut} {u.publie ? "· publie" : "· brouillon"}</span>
             </div>
             <label className="mt-2 block text-sm">Periodicite
               <select className="ml-2 rounded-md border px-2 py-1" value={u.periodicite} onChange={(e) => changePer(u.id, e.target.value)}>
@@ -62,6 +72,9 @@ export function BienDetailPage() {
                 <option value="MENSUEL">Mensuel</option>
               </select>
             </label>
+            <button className="mt-2 rounded-md border px-3 py-1 text-sm" onClick={() => togglePub(u.id, !u.publie)}>
+              {u.publie ? "Depublier" : "Publier"}
+            </button>
           </div>
         ))}
       </section>
