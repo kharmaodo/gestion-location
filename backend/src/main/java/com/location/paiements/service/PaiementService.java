@@ -2,6 +2,7 @@ package com.location.paiements.service;
 
 import com.location.contrats.entity.ContratEntity;
 import com.location.contrats.repository.ContratRepository;
+import com.location.notifications.service.NotificationService;
 import com.location.paiements.dto.EcheanceResponse;
 import com.location.paiements.dto.PaiementRequest;
 import com.location.paiements.dto.PaiementResponse;
@@ -24,12 +25,17 @@ public class PaiementService {
     private final ContratRepository contrats;
     private final EcheanceRepository echeances;
     private final PaiementRepository paiements;
+    private final NotificationService notifications;
 
     public PaiementService(
-            ContratRepository contrats, EcheanceRepository echeances, PaiementRepository paiements) {
+            ContratRepository contrats,
+            EcheanceRepository echeances,
+            PaiementRepository paiements,
+            NotificationService notifications) {
         this.contrats = contrats;
         this.echeances = echeances;
         this.paiements = paiements;
+        this.notifications = notifications;
     }
 
     @Transactional(readOnly = true)
@@ -95,12 +101,16 @@ public class PaiementService {
         }
         e.setMajLe(Instant.now());
         echeances.save(e);
+        notifications.notifier(
+                proprietaireId,
+                "PAIEMENT",
+                "Paiement " + p.getMontant() + " " + e.getDevise() + " reçu (" + p.getMode() + ") quittance " + p.getRecuNumero());
         return toDto(e, true);
     }
 
     private LocalDate nextDebut(ContratEntity c) {
         List<EcheanceEntity> existantes = echeances.findByProprietaireIdOrderByPeriodeDebutDesc(c.getProprietaireId())
-                .stream().filter(e -> e.getContratId().equals(c.getId())).toList();
+                .stream().filter(ex -> ex.getContratId().equals(c.getId())).toList();
         if (existantes.isEmpty()) {
             return c.getDateDebut();
         }
