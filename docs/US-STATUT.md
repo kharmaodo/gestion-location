@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-11, branche `develop` + J12 médias.
+Inventaire au 2026-09-11, branche `feat/j13-admin`.
 Légende : **fait** = API + smoke ; **partiel** = socle présent, critères backlog incomplets ; **non fait**.
 
 ## Fait
@@ -17,6 +17,7 @@ Légende : **fait** = API + smoke ; **partiel** = socle présent, critères back
 | US-08 | RDV visite | Demande publique + confirmation |
 | US-14 | Inscription / login | JWT |
 | US-15 | Reset MDP + 2FA TOTP | |
+| US-16 | Admin plateforme | Bootstrap 1er ADMIN, liste users, statut, grant/revoke rôles |
 | US-21 | Quittance | Numéro généré à l’encaissement |
 | US-24 | Réservation | Anti double-booking basique |
 | US-25 | Publier / dépublier | |
@@ -28,36 +29,28 @@ Légende : **fait** = API + smoke ; **partiel** = socle présent, critères back
 
 | US | Manque pour être « done » backlog |
 |---|---|
-| US-09 | Photos/vidéos : J12 ajoute des **URLs** ; pas d’upload S3, pas de min 3 photos à la publication |
-| US-10 | Chat interne oui ; pas de révélation des coordonnées après signature |
-| US-11 | Résiliation contrat oui ; pas de pénalité calculée / affichée à la signature |
-| US-12 | Champ caution oui ; pas de simulateur ni plafond 3 mois |
-| US-13 | État des lieux ENTREE/SORTIE oui ; pas de workflow caution vs réparations ni photos horodatées |
-| US-20 | Relances persistées oui ; pas d’email/SMS/WhatsApp réel ni job planifié |
-| US-23 | Docs KYC dossier oui ; pas d’espace documentaire contrat/quittance/EDL |
+| US-09 | URLs photo/vidéo ; pas d’upload S3 ni min 3 photos |
+| US-10 | Chat interne ; pas de révélation des coordonnées après signature |
+| US-11 | Résiliation ; pas de pénalité calculée |
+| US-12 | Champ caution ; pas de simulateur ni plafond 3 mois |
+| US-13 | EDL ENTREE/SORTIE ; pas de règle caution vs réparations |
+| US-20 | Relances persistées ; pas d’email/SMS réel ni cron |
+| US-23 | Docs KYC ; pas d’espace documentaire global |
 
-## Non fait
+## Non fait (priorité naturelle suivante)
 
-| US | Titre |
-|---|---|
-| US-16 | Rôle administrateur plateforme + permissions |
-| US-17 | Chiffrement CNI / PII au repos |
-| US-18 | Paiement en ligne Mobile Money / carte |
-| US-19 | Notification temps réel d’un paiement |
-| US-22 | Signature électronique du contrat |
-| US-29 | Supervision ops (jobs, paiements en échec) |
-| US-30 | i18n (FR + autre langue) |
+| Prio | US | Titre |
+|---|---|---|
+| 1 | US-18 | Paiement en ligne Mobile Money / carte |
+| 2 | US-19 | Notification temps réel d’un paiement |
+| 3 | US-22 | Signature électronique du contrat |
+| 4 | US-17 | Chiffrement CNI / PII au repos |
+| 5 | US-29 | Supervision ops |
+| 6 | US-30 | i18n |
 
 ## Hors backlog initial mais livré
 
 - Auth JWT sans Keycloak, refresh tokens
-- Smoke `scripts/api-smoke.sh` (curl bout-en-bout)
+- Smoke `scripts/api-smoke.sh`
 - Dashboard KPI accueil
-
-## Prochaines étapes suggérées
-
-1. US-09 upload réel (MinIO) + contrainte 3 photos — *J12 = URLs seulement*
-2. US-16 admin
-3. US-18 paiement en ligne (agrégateur)
-4. US-22 signature électronique
-5. US-17 chiffrement PII
+- Bootstrap admin via `ADMIN_BOOTSTRAP_TOKEN` (défaut `dev-admin-bootstrap`)
