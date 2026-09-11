@@ -1,6 +1,8 @@
 package com.location.locataires.entity;
 
+import com.location.shared.crypto.EncryptedStringConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -19,7 +21,9 @@ public class DossierEntity {
     private String telephone;
     private String email;
     @Column(name = "piece_type") private String pieceType;
-    @Column(name = "piece_numero") private String pieceNumero;
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "piece_numero", columnDefinition = "text")
+    private String pieceNumero;
     @Column(name = "kyc_statut", nullable = false) private String kycStatut = "EN_ATTENTE";
     @Column(name = "kyc_commentaire") private String kycCommentaire;
     @Column(name = "cree_le", nullable = false) private Instant creeLe = Instant.now();
