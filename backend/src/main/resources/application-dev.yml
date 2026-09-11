@@ -19,3 +19,5 @@ app:
     frontend-url: http://localhost:5173
   admin:
     bootstrap-token: ${ADMIN_BOOTSTRAP_TOKEN:dev-admin-bootstrap}
+  pii:
+    key: ${APP_PII_KEY:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
