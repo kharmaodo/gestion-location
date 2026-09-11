@@ -1,0 +1,12 @@
+package com.location.avis.repository;
+
+import com.location.avis.entity.AvisEntity;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AvisRepository extends JpaRepository<AvisEntity, UUID> {
+    List<AvisEntity> findByCibleUniteIdOrderByCreeLeDesc(UUID uniteId);
+    Optional<AvisEntity> findByAuteurIdAndCibleUniteId(UUID auteurId, UUID uniteId);
+}

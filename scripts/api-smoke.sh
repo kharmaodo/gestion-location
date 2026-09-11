@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke tests HTTP des APIs (J0 → J8).
+# Smoke tests HTTP des APIs (J0 → J9).
 set -euo pipefail
 
 API="${API:-http://localhost:8080}"
@@ -106,6 +106,17 @@ FIN=$(date -d "+10 days" +%F 2>/dev/null || date -v+10d +%F)
 OUT=$(req POST /api/v1/public/reservations "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ibra\",\"telephone\":\"770000000\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /public/reservations"
+
+echo "== Avis"
+OUT=$(req POST /api/v1/avis "{\"cibleUniteId\":\"$UNITE_ID\",\"note\":5,\"commentaire\":\"Tres bien\"}" "$LOC_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 201 "POST /avis"
+OUT=$(req GET "/api/v1/public/annonces/${UNITE_ID}/avis")
+split_body_code "$OUT"
+expect "$CODE" 200 "GET /public/annonces/{id}/avis"
+OUT=$(req POST /api/v1/avis "{\"cibleUniteId\":\"$UNITE_ID\",\"note\":4}" "$LOC_TOKEN")
+split_body_code "$OUT"
+expect "$CODE" 409 "POST /avis doublon"
 
 echo "== Dossier locataire"
 OUT=$(req POST /api/v1/locataires "{\"nom\":\"Diop\",\"prenom\":\"Ibra\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"pieceType\":\"CNI\",\"pieceNumero\":\"123\"}" "$PRO_TOKEN")
