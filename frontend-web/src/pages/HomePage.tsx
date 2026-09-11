@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, clearSession, MeResponse } from "../api";
 
 export function HomePage() {
@@ -16,11 +16,13 @@ export function HomePage() {
     <main className="mx-auto max-w-3xl p-8">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Espace {me.roles.join(", ")}</h1>
-        <button className="rounded-md border px-3 py-1 text-sm" onClick={logout}>Deconnexion</button>
+        <div className="flex gap-3 text-sm">
+          <Link className="rounded-md border px-3 py-1" to="/securite">Securite</Link>
+          <button className="rounded-md border px-3 py-1" onClick={logout}>Deconnexion</button>
+        </div>
       </header>
       <section className="rounded-lg bg-white p-6 shadow">
         <p>Bonjour {me.prenom ?? me.email ?? "utilisateur"}.</p>
-        <p className="mt-2 text-sm text-slate-600">Socle J0 pret : JWT sans Keycloak.</p>
       </section>
     </main>
   );
