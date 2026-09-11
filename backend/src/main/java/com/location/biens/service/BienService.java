@@ -27,10 +27,12 @@ public class BienService {
 
     private final BienImmobilierRepository biens;
     private final UniteLocativeRepository unites;
+    private final MediaService medias;
 
-    public BienService(BienImmobilierRepository biens, UniteLocativeRepository unites) {
+    public BienService(BienImmobilierRepository biens, UniteLocativeRepository unites, MediaService medias) {
         this.biens = biens;
         this.unites = unites;
+        this.medias = medias;
     }
 
     @Transactional(readOnly = true)
@@ -121,6 +123,9 @@ public class BienService {
         owned(proprietaireId, bienId);
         UniteLocativeEntity u = unites.findByIdAndBienId(uniteId, bienId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unite introuvable"));
+        if (publie && medias.nombrePhotos(u.getId()) < 3) {
+            throw new ApiException(HttpStatus.CONFLICT, "publication refusee : 3 photos minimum");
+        }
         u.setPublie(publie);
         u.setMajLe(Instant.now());
         unites.save(u);
