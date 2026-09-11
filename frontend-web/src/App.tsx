@@ -21,6 +21,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { ReservationsPage } from "./pages/ReservationsPage";
 import { ResetPage } from "./pages/ResetPage";
 import { SecurityPage } from "./pages/SecurityPage";
+import { VisitesPage } from "./pages/VisitesPage";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   return getAccessToken() ? children : <Navigate to="/connexion" replace />;
@@ -50,6 +51,7 @@ export default function App() {
       <Route path="/loyers" element={<PrivateRoute><LoyersPage /></PrivateRoute>} />
       <Route path="/messages" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
       <Route path="/messages/:id" element={<PrivateRoute><ConversationDetailPage /></PrivateRoute>} />
+      <Route path="/visites" element={<PrivateRoute><VisitesPage /></PrivateRoute>} />
     </Routes>
   );
 }
