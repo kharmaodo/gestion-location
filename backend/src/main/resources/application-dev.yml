@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:location_db}
+    username: ${POSTGRES_USER:location_user}
+    password: ${POSTGRES_PASSWORD:location_pwd}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
