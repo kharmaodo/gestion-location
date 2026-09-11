@@ -6,6 +6,8 @@ import { BienDetailPage } from "./pages/BienDetailPage";
 import { BiensPage } from "./pages/BiensPage";
 import { ContratDetailPage } from "./pages/ContratDetailPage";
 import { ContratsPage } from "./pages/ContratsPage";
+import { ConversationDetailPage } from "./pages/ConversationDetailPage";
+import { ConversationsPage } from "./pages/ConversationsPage";
 import { DossierDetailPage } from "./pages/DossierDetailPage";
 import { ForgotPage } from "./pages/ForgotPage";
 import { HomePage } from "./pages/HomePage";
@@ -46,6 +48,8 @@ export default function App() {
       <Route path="/contrats/nouveau" element={<PrivateRoute><NouveauContratPage /></PrivateRoute>} />
       <Route path="/contrats/:id" element={<PrivateRoute><ContratDetailPage /></PrivateRoute>} />
       <Route path="/loyers" element={<PrivateRoute><LoyersPage /></PrivateRoute>} />
+      <Route path="/messages" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
+      <Route path="/messages/:id" element={<PrivateRoute><ConversationDetailPage /></PrivateRoute>} />
     </Routes>
   );
 }

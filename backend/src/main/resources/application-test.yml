@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:location;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS identites\\;CREATE SCHEMA IF NOT EXISTS biens\\;CREATE SCHEMA IF NOT EXISTS locataires\\;CREATE SCHEMA IF NOT EXISTS reservations\\;CREATE SCHEMA IF NOT EXISTS contrats\\;CREATE SCHEMA IF NOT EXISTS paiements
+    url: jdbc:h2:mem:location;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS identites\\;CREATE SCHEMA IF NOT EXISTS biens\\;CREATE SCHEMA IF NOT EXISTS locataires\\;CREATE SCHEMA IF NOT EXISTS reservations\\;CREATE SCHEMA IF NOT EXISTS contrats\\;CREATE SCHEMA IF NOT EXISTS paiements\\;CREATE SCHEMA IF NOT EXISTS messagerie
     driver-class-name: org.h2.Driver
     username: sa
     password:
