@@ -9,13 +9,16 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
 public class NotificationService {
     private final NotificationRepository notifications;
+    private final NotificationHub hub;
 
-    public NotificationService(NotificationRepository notifications) {
+    public NotificationService(NotificationRepository notifications, NotificationHub hub) {
         this.notifications = notifications;
+        this.hub = hub;
     }
 
     @Transactional
@@ -26,13 +29,16 @@ public class NotificationService {
         e.setType(type);
         e.setMessage(message);
         notifications.save(e);
+        hub.publish(destinataireId, toDto(e));
+    }
+
+    public SseEmitter stream(UUID userId) {
+        return hub.subscribe(userId);
     }
 
     @Transactional(readOnly = true)
     public List<NotificationResponse> lister(UUID userId) {
-        return notifications.findByDestinataireIdOrderByCreeLeDesc(userId).stream()
-                .map(n -> new NotificationResponse(n.getId(), n.getType(), n.getMessage(), n.isLu(), n.getCreeLe()))
-                .toList();
+        return notifications.findByDestinataireIdOrderByCreeLeDesc(userId).stream().map(this::toDto).toList();
     }
 
     @Transactional
@@ -41,6 +47,10 @@ public class NotificationService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notification introuvable"));
         e.setLu(true);
         notifications.save(e);
-        return new NotificationResponse(e.getId(), e.getType(), e.getMessage(), e.isLu(), e.getCreeLe());
+        return toDto(e);
+    }
+
+    private NotificationResponse toDto(NotificationEntity n) {
+        return new NotificationResponse(n.getId(), n.getType(), n.getMessage(), n.isLu(), n.getCreeLe());
     }
 }
