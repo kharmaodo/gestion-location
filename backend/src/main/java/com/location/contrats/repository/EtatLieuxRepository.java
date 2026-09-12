@@ -10,4 +10,5 @@ public interface EtatLieuxRepository extends JpaRepository<EtatLieuxEntity, UUID
     List<EtatLieuxEntity> findByContratIdOrderByCreeLeAsc(UUID contratId);
     boolean existsByContratIdAndType(UUID contratId, String type);
     Optional<EtatLieuxEntity> findByIdAndProprietaireId(UUID id, UUID proprietaireId);
+    Optional<EtatLieuxEntity> findByContratIdAndType(UUID contratId, String type);
 }
