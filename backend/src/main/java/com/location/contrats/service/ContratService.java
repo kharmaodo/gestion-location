@@ -35,18 +35,21 @@ public class ContratService {
     private final UniteLocativeRepository unites;
     private final BienImmobilierRepository biens;
     private final DossierRepository dossiers;
+    private final CautionService cautions;
 
     public ContratService(
             ContratRepository contrats,
             AvenantRepository avenants,
             UniteLocativeRepository unites,
             BienImmobilierRepository biens,
-            DossierRepository dossiers) {
+            DossierRepository dossiers,
+            CautionService cautions) {
         this.contrats = contrats;
         this.avenants = avenants;
         this.unites = unites;
         this.biens = biens;
         this.dossiers = dossiers;
+        this.cautions = cautions;
     }
 
     @Transactional(readOnly = true)
@@ -88,6 +91,7 @@ public class ContratService {
         e.setLoyer(req.loyer() != null ? req.loyer() : unite.getLoyer());
         e.setPeriodicite(normalizePer(req.periodicite() != null ? req.periodicite() : unite.getPeriodicite()));
         e.setJourEcheance(req.jourEcheance() != null ? req.jourEcheance() : unite.getJourEcheance());
+        cautions.assertCautionSousPlafond(req.caution(), e.getLoyer(), e.getPeriodicite());
         e.setCaution(req.caution());
         contrats.save(e);
         return toDto(e, true);
