@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-12, `feat/us-30-i18n-ui`.
+Inventaire au 2026-09-12, `feat/us-09-galerie-ui`.
 
 ## Fait
 
@@ -10,7 +10,7 @@ US-01 à 08, 14–16, 21, 24–28.
 
 | US | Manque |
 |---|---|
-| US-09 | MinIO + 3 photos ; pas d’UI galerie |
+| US-09 | Galerie + ajout URL sur détail bien ; pas d’upload fichier dans l’UI |
 | US-10 | Contacts après double signature |
 | US-11 | Pénalité 1 loyer si préavis < 30 j |
 | US-12 | Simulateur + plafond 3 mois ; pas d’UI |
@@ -22,4 +22,4 @@ US-01 à 08, 14–16, 21, 24–28.
 | US-22 | Attestation JSON ; pas de PDF signé |
 | US-23 | Liste + upload + meta URL ; pas d’UI |
 | US-29 | Alertes loyers ; pas de cron |
-| US-30 | Nav HomePage FR/EN/WO via `/public/i18n` ; pages restantes en dur |
+| US-30 | Nav HomePage FR/EN/WO ; pages restantes en dur |
