@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, clearSession, getAccessToken, MeResponse } from "../api";
+import { useI18n } from "../i18n";
 
 type Dash = {
   biens: number;
@@ -20,6 +21,7 @@ const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { t, locale, setLocale } = useI18n();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [dash, setDash] = useState<Dash | null>(null);
   useEffect(() => {
@@ -41,15 +43,20 @@ export function HomePage() {
   return (
     <main className="mx-auto max-w-5xl p-8">
       <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-primary">Espace {me.roles.join(", ")}</h1>
-        <div className="flex flex-wrap gap-3 text-sm">
+        <h1 className="text-2xl font-semibold text-primary">{t("app.name")}</h1>
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <select className="rounded-md border px-2 py-1" value={locale} onChange={(e) => setLocale(e.target.value)}>
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+            <option value="wo">WO</option>
+          </select>
           <Link className="rounded-md border px-3 py-1" to="/annonces">Annonces</Link>
-          {proprio && <Link className="rounded-md border px-3 py-1" to="/biens">Mes biens</Link>}
-          {proprio && <Link className="rounded-md border px-3 py-1" to="/locataires">Locataires</Link>}
+          {proprio && <Link className="rounded-md border px-3 py-1" to="/biens">{t("nav.biens")}</Link>}
+          {proprio && <Link className="rounded-md border px-3 py-1" to="/locataires">{t("nav.locataires")}</Link>}
           {proprio && <Link className="rounded-md border px-3 py-1" to="/reservations">Reservations</Link>}
-          {proprio && <Link className="rounded-md border px-3 py-1" to="/contrats">Contrats</Link>}
-          {proprio && <Link className="rounded-md border px-3 py-1" to="/loyers">Loyers</Link>}
-          <Link className="rounded-md border px-3 py-1" to="/messages">Messages</Link>
+          {proprio && <Link className="rounded-md border px-3 py-1" to="/contrats">{t("nav.contrats")}</Link>}
+          {proprio && <Link className="rounded-md border px-3 py-1" to="/loyers">{t("nav.loyers")}</Link>}
+          <Link className="rounded-md border px-3 py-1" to="/messages">{t("nav.messages")}</Link>
           <Link className="rounded-md border px-3 py-1" to="/securite">Securite</Link>
           <button className="rounded-md border px-3 py-1" onClick={logout}>Deconnexion</button>
         </div>
