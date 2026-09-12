@@ -18,7 +18,11 @@ public class DossierEntity {
     @Column(name = "utilisateur_id") private UUID utilisateurId;
     private String prenom;
     @Column(nullable = false) private String nom;
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(columnDefinition = "text")
     private String telephone;
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(columnDefinition = "text")
     private String email;
     @Column(name = "piece_type") private String pieceType;
     @Convert(converter = EncryptedStringConverter.class)

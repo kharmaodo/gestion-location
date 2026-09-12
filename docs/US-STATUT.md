@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-12, `feat/us-13-restitution`.
+Inventaire au 2026-09-12, `feat/us-17-pii-etendu`.
 
 ## Fait
 
@@ -14,8 +14,8 @@ US-01 à 08, 14–16, 21, 24–28.
 | US-10 | Contacts après double signature |
 | US-11 | Pénalité 1 loyer si préavis < 30 j |
 | US-12 | Simulateur + plafond 3 mois ; pas d’UI |
-| US-13 | Restitution = caution − réparations EDL SORTIE validée ; pas de virement |
-| US-17 | Seulement `piece_numero` |
+| US-13 | Restitution caution vs EDL SORTIE ; pas de virement |
+| US-17 | AES-GCM `piece_numero` + email + tél dossier ; compte utilisateur encore clair |
 | US-18 | Mock agrégateur |
 | US-19 | Inbox, pas de push |
 | US-20 | Relances sans canal |
