@@ -3,6 +3,8 @@ package com.location.contrats.controller;
 import com.location.contrats.dto.AvenantRequest;
 import com.location.contrats.dto.ContratRequest;
 import com.location.contrats.dto.ContratResponse;
+import com.location.contrats.dto.ResiliationRequest;
+import com.location.contrats.dto.ResiliationResponse;
 import com.location.contrats.service.ContratService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -50,8 +52,9 @@ public class ContratController {
     }
 
     @PostMapping("/{id}/resiliation")
-    public ContratResponse resilier(Authentication auth, @PathVariable UUID id) {
-        return service.resilier(UUID.fromString(auth.getName()), id);
+    public ResiliationResponse resilier(
+            Authentication auth, @PathVariable UUID id, @RequestBody(required = false) ResiliationRequest request) {
+        return service.resilier(UUID.fromString(auth.getName()), id, request);
     }
 
     @PostMapping("/{id}/avenants")

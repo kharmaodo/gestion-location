@@ -8,13 +8,17 @@ import com.location.contrats.dto.AvenantRequest;
 import com.location.contrats.dto.AvenantResponse;
 import com.location.contrats.dto.ContratRequest;
 import com.location.contrats.dto.ContratResponse;
+import com.location.contrats.dto.ResiliationRequest;
+import com.location.contrats.dto.ResiliationResponse;
 import com.location.contrats.entity.AvenantEntity;
 import com.location.contrats.entity.ContratEntity;
 import com.location.contrats.repository.AvenantRepository;
 import com.location.contrats.repository.ContratRepository;
 import com.location.locataires.repository.DossierRepository;
 import com.location.shared.exception.ApiException;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ContratService {
     private static final Set<String> PERIODICITES = Set.of("JOURNALIER", "HEBDOMADAIRE", "MENSUEL");
+    private static final int PREAVIS_MIN_JOURS = 30;
     private final ContratRepository contrats;
     private final AvenantRepository avenants;
     private final UniteLocativeRepository unites;
@@ -110,10 +115,18 @@ public class ContratService {
     }
 
     @Transactional
-    public ContratResponse resilier(UUID proprietaireId, UUID id) {
+    public ResiliationResponse resilier(UUID proprietaireId, UUID id, ResiliationRequest req) {
         ContratEntity e = owned(proprietaireId, id);
         if (!"ACTIF".equals(e.getStatut())) {
             throw new ApiException(HttpStatus.CONFLICT, "seul un contrat actif peut etre resilie");
+        }
+        int preavis = req == null || req.preavisJours() == null ? 0 : req.preavisJours();
+        boolean enCours = e.getDateFin() == null || e.getDateFin().isAfter(LocalDate.now());
+        BigDecimal penalite = BigDecimal.ZERO;
+        String motif = "sans penalite";
+        if (enCours && preavis < PREAVIS_MIN_JOURS) {
+            penalite = e.getLoyer() == null ? BigDecimal.ZERO : e.getLoyer();
+            motif = "preavis inferieur a " + PREAVIS_MIN_JOURS + " jours : 1 periode de loyer";
         }
         e.setStatut("RESILIE");
         e.setMajLe(Instant.now());
@@ -123,7 +136,7 @@ public class ContratService {
             u.setMajLe(Instant.now());
             unites.save(u);
         });
-        return toDto(e, true);
+        return new ResiliationResponse(toDto(e, true), penalite, motif);
     }
 
     @Transactional
