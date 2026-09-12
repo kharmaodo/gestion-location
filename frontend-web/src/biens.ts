@@ -29,6 +29,8 @@ export type Bien = {
   unitesDetail?: Unite[];
 };
 
+export type Media = { id: string; uniteId: string; url: string; type: string; position: number };
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -60,5 +62,11 @@ export const biensApi = {
     req<Unite>(`/api/v1/biens/${bienId}/unites/${uniteId}/publication`, {
       method: "PUT",
       body: JSON.stringify({ publie }),
+    }),
+  medias: (uniteId: string) => req<Media[]>(`/api/v1/public/annonces/${uniteId}/medias`),
+  addMedia: (uniteId: string, url: string) =>
+    req<Media>(`/api/v1/unites/${uniteId}/medias`, {
+      method: "POST",
+      body: JSON.stringify({ url, type: "PHOTO" }),
     }),
 };
