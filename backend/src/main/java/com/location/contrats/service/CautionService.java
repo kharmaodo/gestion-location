@@ -4,7 +4,6 @@ import com.location.contrats.dto.CautionSimulationRequest;
 import com.location.contrats.dto.CautionSimulationResponse;
 import com.location.shared.exception.ApiException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,10 @@ public class CautionService {
     private static final Set<String> PERIODICITES = Set.of("JOURNALIER", "HEBDOMADAIRE", "MENSUEL");
 
     public CautionSimulationResponse simuler(CautionSimulationRequest req) {
-        String per = req.periodicite() == null || req.periodicite().isBlank() ? "MENSUEL" : req.periodicite().toUpperCase();
+        if (req == null || req.loyer() == null || req.loyer().signum() <= 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "loyer requis et > 0");
+        }
+        String per = req.periodicite() == null || req.periodicite().isBlank() ? "MENSUEL" : req.periodicite().trim().toUpperCase();
         if (!PERIODICITES.contains(per)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "periodicite invalide");
         }
@@ -25,14 +27,7 @@ public class CautionService {
         BigDecimal plafond = mensuel.multiply(BigDecimal.valueOf(PLAFOND_MOIS));
         BigDecimal calculee = mensuel.multiply(BigDecimal.valueOf(retenus));
         return new CautionSimulationResponse(
-                req.loyer(),
-                per,
-                mensuel,
-                demandes,
-                retenus,
-                plafond,
-                calculee,
-                "XOF",
+                req.loyer(), per, mensuel, demandes, retenus, plafond, calculee, "XOF",
                 "plafond " + PLAFOND_MOIS + " mois de loyer equivalent");
     }
 
@@ -43,7 +38,7 @@ public class CautionService {
         if (caution.signum() < 0) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "caution negative");
         }
-        String per = periodicite == null ? "MENSUEL" : periodicite;
+        String per = periodicite == null || periodicite.isBlank() ? "MENSUEL" : periodicite.trim().toUpperCase();
         BigDecimal plafond = equivalentMensuel(loyer, per).multiply(BigDecimal.valueOf(PLAFOND_MOIS));
         if (caution.compareTo(plafond) > 0) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "caution superieure au plafond de 3 mois");
@@ -54,10 +49,11 @@ public class CautionService {
         if (loyer == null) {
             return BigDecimal.ZERO;
         }
-        return switch (periodicite) {
+        String per = periodicite == null ? "MENSUEL" : periodicite.trim().toUpperCase();
+        return switch (per) {
             case "JOURNALIER" -> loyer.multiply(BigDecimal.valueOf(30));
             case "HEBDOMADAIRE" -> loyer.multiply(BigDecimal.valueOf(4));
-            default -> loyer.setScale(2, RoundingMode.HALF_UP);
+            default -> loyer;
         };
     }
 }
