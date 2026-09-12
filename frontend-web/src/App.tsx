@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { getAccessToken } from "./api";
+import { AppShell } from "./layout/AppShell";
 import { AnnonceDetailPage } from "./pages/AnnonceDetailPage";
 import { AnnoncesPage } from "./pages/AnnoncesPage";
 import { BienDetailPage } from "./pages/BienDetailPage";
@@ -36,22 +37,30 @@ export default function App() {
       <Route path="/reset-mot-de-passe" element={<ResetPage />} />
       <Route path="/annonces" element={<AnnoncesPage />} />
       <Route path="/annonces/:id" element={<AnnonceDetailPage />} />
-      <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
-      <Route path="/securite" element={<PrivateRoute><SecurityPage /></PrivateRoute>} />
-      <Route path="/biens" element={<PrivateRoute><BiensPage /></PrivateRoute>} />
-      <Route path="/biens/nouveau" element={<PrivateRoute><NouveauBienPage /></PrivateRoute>} />
-      <Route path="/biens/:id" element={<PrivateRoute><BienDetailPage /></PrivateRoute>} />
-      <Route path="/locataires" element={<PrivateRoute><LocatairesPage /></PrivateRoute>} />
-      <Route path="/locataires/nouveau" element={<PrivateRoute><NouveauDossierPage /></PrivateRoute>} />
-      <Route path="/locataires/:id" element={<PrivateRoute><DossierDetailPage /></PrivateRoute>} />
-      <Route path="/reservations" element={<PrivateRoute><ReservationsPage /></PrivateRoute>} />
-      <Route path="/contrats" element={<PrivateRoute><ContratsPage /></PrivateRoute>} />
-      <Route path="/contrats/nouveau" element={<PrivateRoute><NouveauContratPage /></PrivateRoute>} />
-      <Route path="/contrats/:id" element={<PrivateRoute><ContratDetailPage /></PrivateRoute>} />
-      <Route path="/loyers" element={<PrivateRoute><LoyersPage /></PrivateRoute>} />
-      <Route path="/messages" element={<PrivateRoute><ConversationsPage /></PrivateRoute>} />
-      <Route path="/messages/:id" element={<PrivateRoute><ConversationDetailPage /></PrivateRoute>} />
-      <Route path="/visites" element={<PrivateRoute><VisitesPage /></PrivateRoute>} />
+      <Route
+        element={
+          <PrivateRoute>
+            <AppShell />
+          </PrivateRoute>
+        }
+      >
+        <Route path="/" element={<HomePage />} />
+        <Route path="/securite" element={<SecurityPage />} />
+        <Route path="/biens" element={<BiensPage />} />
+        <Route path="/biens/nouveau" element={<NouveauBienPage />} />
+        <Route path="/biens/:id" element={<BienDetailPage />} />
+        <Route path="/locataires" element={<LocatairesPage />} />
+        <Route path="/locataires/nouveau" element={<NouveauDossierPage />} />
+        <Route path="/locataires/:id" element={<DossierDetailPage />} />
+        <Route path="/reservations" element={<ReservationsPage />} />
+        <Route path="/contrats" element={<ContratsPage />} />
+        <Route path="/contrats/nouveau" element={<NouveauContratPage />} />
+        <Route path="/contrats/:id" element={<ContratDetailPage />} />
+        <Route path="/loyers" element={<LoyersPage />} />
+        <Route path="/messages" element={<ConversationsPage />} />
+        <Route path="/messages/:id" element={<ConversationDetailPage />} />
+        <Route path="/visites" element={<VisitesPage />} />
+      </Route>
     </Routes>
   );
 }
