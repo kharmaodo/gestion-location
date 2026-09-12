@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Bien, biensApi } from "../biens";
+import { Bien, Media, biensApi } from "../biens";
 
 export function BienDetailPage() {
   const { id } = useParams();
@@ -11,9 +11,18 @@ export function BienDetailPage() {
   const [meuble, setMeuble] = useState(true);
   const [periodicite, setPeriodicite] = useState("MENSUEL");
   const [error, setError] = useState<string | null>(null);
+  const [medias, setMedias] = useState<Record<string, Media[]>>({});
+  const [photoUrl, setPhotoUrl] = useState<Record<string, string>>({});
 
   function reload() {
-    if (id) biensApi.get(id).then(setBien).catch((e) => setError(e.message));
+    if (id) biensApi.get(id).then(async (b) => {
+      setBien(b);
+      const next: Record<string, Media[]> = {};
+      for (const u of b.unitesDetail ?? []) {
+        next[u.id] = await biensApi.medias(u.id).catch(() => []);
+      }
+      setMedias(next);
+    }).catch((e) => setError(e.message));
   }
   useEffect(reload, [id]);
 
@@ -48,6 +57,18 @@ export function BienDetailPage() {
     }
   }
 
+  async function addPhoto(uniteId: string) {
+    const url = (photoUrl[uniteId] ?? "").trim();
+    if (!url) return;
+    try {
+      await biensApi.addMedia(uniteId, url);
+      setPhotoUrl((s) => ({ ...s, [uniteId]: "" }));
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    }
+  }
+
   if (!bien) return <p className="p-8">{error ?? "Chargement..."}</p>;
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -64,6 +85,17 @@ export function BienDetailPage() {
                 <p className="text-sm text-slate-600">{u.type} · {u.loyer} {u.devise} · {u.meuble ? "meuble" : "non meuble"}</p>
               </div>
               <span className="text-sm">{u.statut} {u.publie ? "· publie" : "· brouillon"}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(medias[u.id] ?? []).map((m) => (
+                <img key={m.id} src={m.url} alt="" className="h-20 w-20 rounded object-cover bg-slate-100" />
+              ))}
+              <span className="self-center text-xs text-slate-500">{(medias[u.id] ?? []).length}/3 photos min</span>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <input className="flex-1 rounded-md border px-2 py-1 text-sm" placeholder="URL photo"
+                value={photoUrl[u.id] ?? ""} onChange={(e) => setPhotoUrl((s) => ({ ...s, [u.id]: e.target.value }))} />
+              <button type="button" className="rounded-md border px-3 py-1 text-sm" onClick={() => addPhoto(u.id)}>Ajouter photo</button>
             </div>
             <label className="mt-2 block text-sm">Periodicite
               <select className="ml-2 rounded-md border px-2 py-1" value={u.periodicite} onChange={(e) => changePer(u.id, e.target.value)}>
