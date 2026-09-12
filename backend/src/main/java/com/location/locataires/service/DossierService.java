@@ -1,5 +1,6 @@
 package com.location.locataires.service;
 
+import com.location.locataires.dto.DocumentMetaRequest;
 import com.location.locataires.dto.DocumentResponse;
 import com.location.locataires.dto.DossierRequest;
 import com.location.locataires.dto.DossierResponse;
@@ -44,6 +45,12 @@ public class DossierService {
     @Transactional(readOnly = true)
     public DossierResponse detail(UUID proprietaireId, UUID id) {
         return toDto(owned(proprietaireId, id), true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> listerDocuments(UUID proprietaireId, UUID dossierId) {
+        owned(proprietaireId, dossierId);
+        return documents.findByDossierIdOrderByCreeLeDesc(dossierId).stream().map(this::toDoc).toList();
     }
 
     @Transactional
@@ -109,6 +116,24 @@ public class DossierService {
         }
     }
 
+    @Transactional
+    public DocumentResponse ajouterMeta(UUID proprietaireId, UUID dossierId, DocumentMetaRequest req) {
+        owned(proprietaireId, dossierId);
+        String t = req.type().toUpperCase();
+        if (!DOC_TYPES.contains(t)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "type de document invalide");
+        }
+        DocumentEntity d = new DocumentEntity();
+        d.setId(UUID.randomUUID());
+        d.setDossierId(dossierId);
+        d.setType(t);
+        d.setNomFichier(req.nomFichier());
+        d.setChemin(req.chemin());
+        d.setMime(req.mime() == null ? "application/octet-stream" : req.mime());
+        documents.save(d);
+        return toDoc(d);
+    }
+
     private void apply(DossierEntity e, DossierRequest req) {
         e.setNom(req.nom());
         e.setPrenom(req.prenom());
@@ -133,6 +158,7 @@ public class DossierService {
     }
 
     private DocumentResponse toDoc(DocumentEntity d) {
-        return new DocumentResponse(d.getId(), d.getType(), d.getNomFichier(), d.getMime(), d.getKycStatut(), d.getCreeLe());
+        return new DocumentResponse(
+                d.getId(), d.getType(), d.getNomFichier(), d.getChemin(), d.getMime(), d.getKycStatut(), d.getCreeLe());
     }
 }
