@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { getAccessToken } from "./api";
 import { AppShell } from "./layout/AppShell";
 import { AnnonceDetailPage } from "./pages/AnnonceDetailPage";
@@ -28,6 +28,10 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   return getAccessToken() ? children : <Navigate to="/connexion" replace />;
 }
 
+function AnnoncesLayout() {
+  return getAccessToken() ? <AppShell /> : <Outlet />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -35,8 +39,10 @@ export default function App() {
       <Route path="/inscription" element={<RegisterPage />} />
       <Route path="/mot-de-passe-oublie" element={<ForgotPage />} />
       <Route path="/reset-mot-de-passe" element={<ResetPage />} />
-      <Route path="/annonces" element={<AnnoncesPage />} />
-      <Route path="/annonces/:id" element={<AnnonceDetailPage />} />
+      <Route element={<AnnoncesLayout />}>
+        <Route path="/annonces" element={<AnnoncesPage />} />
+        <Route path="/annonces/:id" element={<AnnonceDetailPage />} />
+      </Route>
       <Route
         element={
           <PrivateRoute>
