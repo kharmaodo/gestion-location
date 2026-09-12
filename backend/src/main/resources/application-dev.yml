@@ -18,6 +18,16 @@ spring:
       mail.smtp.auth: false
       mail.smtp.starttls.enable: false
 
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: false
+
 app:
   mail:
     from: noreply@gestion-location.local
