@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-12, `feat/us-12-caution`.
+Inventaire au 2026-09-12, `feat/us-13-restitution`.
 
 ## Fait
 
@@ -14,7 +14,7 @@ US-01 à 08, 14–16, 21, 24–28.
 | US-10 | Contacts après double signature |
 | US-11 | Pénalité 1 loyer si préavis < 30 j |
 | US-12 | Simulateur + plafond 3 mois ; pas d’UI |
-| US-13 | Caution vs réparations |
+| US-13 | Restitution = caution − réparations EDL SORTIE validée ; pas de virement |
 | US-17 | Seulement `piece_numero` |
 | US-18 | Mock agrégateur |
 | US-19 | Inbox, pas de push |
