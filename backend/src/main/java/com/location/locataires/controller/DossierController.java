@@ -1,5 +1,6 @@
 package com.location.locataires.controller;
 
+import com.location.locataires.dto.DocumentMetaRequest;
 import com.location.locataires.dto.DocumentResponse;
 import com.location.locataires.dto.DossierRequest;
 import com.location.locataires.dto.DossierResponse;
@@ -59,6 +60,11 @@ public class DossierController {
         return service.deciderKyc(uid(auth), id, request);
     }
 
+    @GetMapping("/{id}/documents")
+    public List<DocumentResponse> documents(Authentication auth, @PathVariable UUID id) {
+        return service.listerDocuments(uid(auth), id);
+    }
+
     @PostMapping("/{id}/documents")
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentResponse document(
@@ -67,6 +73,13 @@ public class DossierController {
             @RequestParam String type,
             @RequestParam("file") MultipartFile file) {
         return service.ajouterDocument(uid(auth), id, type, file);
+    }
+
+    @PostMapping("/{id}/documents/meta")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DocumentResponse documentMeta(
+            Authentication auth, @PathVariable UUID id, @Valid @RequestBody DocumentMetaRequest request) {
+        return service.ajouterMeta(uid(auth), id, request);
     }
 
     private static UUID uid(Authentication auth) {
