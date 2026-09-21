@@ -38,6 +38,14 @@ export type Certificat = {
   [key: string]: unknown;
 };
 
+export type ContactPartie = { nom?: string; email?: string; telephone?: string };
+export type Contacts = {
+  revele: boolean;
+  motif?: string;
+  proprietaire?: ContactPartie;
+  locataire?: ContactPartie;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -61,4 +69,5 @@ export const contratsApi = {
   avenant: (id: string, payload: unknown) =>
     req<Contrat>(`/api/v1/contrats/${id}/avenants`, { method: "POST", body: JSON.stringify(payload) }),
   certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),
+  contacts: (id: string) => req<Contacts>(`/api/v1/contrats/${id}/contacts`),
 };
