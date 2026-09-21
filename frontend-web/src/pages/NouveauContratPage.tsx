@@ -1,21 +1,22 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Bien, biensApi } from "../biens";
 import { contratsApi } from "../contrats";
 import { Dossier, locatairesApi } from "../locataires";
 
 export function NouveauContratPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [biens, setBiens] = useState<Bien[]>([]);
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
-  const [uniteId, setUniteId] = useState("");
+  const [uniteId, setUniteId] = useState(params.get("uniteId") ?? "");
   const [dossierId, setDossierId] = useState("");
-  const [dateDebut, setDateDebut] = useState("");
+  const [reservationId] = useState(params.get("reservationId") ?? "");
+  const [dateDebut, setDateDebut] = useState(params.get("dateDebut") ?? "");
   const [loyer, setLoyer] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all(biens.map(() => null));
     biensApi.list().then(async (list) => {
       const details = await Promise.all(list.map((b) => biensApi.get(b.id)));
       setBiens(details);
@@ -29,6 +30,7 @@ export function NouveauContratPage() {
       const c = await contratsApi.create({
         uniteId,
         dossierId: dossierId || null,
+        reservationId: reservationId || null,
         dateDebut,
         loyer: loyer ? Number(loyer) : null,
       });
@@ -41,6 +43,7 @@ export function NouveauContratPage() {
   return (
     <main className="mx-auto max-w-lg p-8">
       <h1 className="mb-6 text-2xl font-semibold text-primary">Nouveau contrat</h1>
+      {reservationId && <p className="mb-3 text-sm text-slate-600">Depuis reservation {reservationId.slice(0, 8)}…</p>}
       <form className="space-y-3 rounded-lg bg-white p-6 shadow" onSubmit={onSubmit}>
         <select className="w-full rounded-md border px-3 py-2" value={uniteId} onChange={(e) => setUniteId(e.target.value)} required>
           <option value="">Unite</option>
