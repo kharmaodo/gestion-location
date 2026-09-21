@@ -12,7 +12,7 @@ export function BienDetailPage() {
   const [periodicite, setPeriodicite] = useState("MENSUEL");
   const [error, setError] = useState<string | null>(null);
   const [medias, setMedias] = useState<Record<string, Media[]>>({});
-  const [photoUrl, setPhotoUrl] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
 
   function reload() {
     if (id) biensApi.get(id).then(async (b) => {
@@ -57,15 +57,19 @@ export function BienDetailPage() {
     }
   }
 
-  async function addPhoto(uniteId: string) {
-    const url = (photoUrl[uniteId] ?? "").trim();
-    if (!url) return;
+  async function uploadPhotos(uniteId: string, files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(uniteId);
+    setError(null);
     try {
-      await biensApi.addMedia(uniteId, url);
-      setPhotoUrl((s) => ({ ...s, [uniteId]: "" }));
+      for (const file of Array.from(files)) {
+        await biensApi.uploadMedia(uniteId, file);
+      }
       reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur");
+      setError(err instanceof Error ? err.message : "Upload impossible");
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -92,11 +96,21 @@ export function BienDetailPage() {
               ))}
               <span className="self-center text-xs text-slate-500">{(medias[u.id] ?? []).length}/3 photos min</span>
             </div>
-            <div className="mt-2 flex gap-2">
-              <input className="flex-1 rounded-md border px-2 py-1 text-sm" placeholder="URL photo"
-                value={photoUrl[u.id] ?? ""} onChange={(e) => setPhotoUrl((s) => ({ ...s, [u.id]: e.target.value }))} />
-              <button type="button" className="rounded-md border px-3 py-1 text-sm" onClick={() => addPhoto(u.id)}>Ajouter photo</button>
-            </div>
+            <label className="mt-2 block text-sm">
+              Ajouter des photos (fichier)
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="mt-1 block w-full text-sm"
+                disabled={busy === u.id}
+                onChange={(e) => {
+                  void uploadPhotos(u.id, e.target.files);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {busy === u.id && <p className="text-xs text-slate-500">Upload en cours…</p>}
             <label className="mt-2 block text-sm">Periodicite
               <select className="ml-2 rounded-md border px-2 py-1" value={u.periodicite} onChange={(e) => changePer(u.id, e.target.value)}>
                 <option value="JOURNALIER">Journalier</option>
