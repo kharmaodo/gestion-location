@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface DossierRepository extends JpaRepository<DossierEntity, UUID> {
     List<DossierEntity> findByProprietaireIdOrderByMajLeDesc(UUID proprietaireId);
     Optional<DossierEntity> findByIdAndProprietaireId(UUID id, UUID proprietaireId);
+    List<DossierEntity> findByUtilisateurId(UUID utilisateurId);
 }
