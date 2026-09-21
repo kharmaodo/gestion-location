@@ -5,6 +5,7 @@ import { AnnonceDetailPage } from "./pages/AnnonceDetailPage";
 import { AnnoncesPage } from "./pages/AnnoncesPage";
 import { BienDetailPage } from "./pages/BienDetailPage";
 import { BiensPage } from "./pages/BiensPage";
+import { CautionPage } from "./pages/CautionPage";
 import { ContratDetailPage } from "./pages/ContratDetailPage";
 import { ContratsPage } from "./pages/ContratsPage";
 import { ConversationDetailPage } from "./pages/ConversationDetailPage";
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="/contrats" element={<ContratsPage />} />
         <Route path="/contrats/nouveau" element={<NouveauContratPage />} />
         <Route path="/contrats/:id" element={<ContratDetailPage />} />
+        <Route path="/caution" element={<CautionPage />} />
         <Route path="/loyers" element={<LoyersPage />} />
         <Route path="/messages" element={<ConversationsPage />} />
         <Route path="/messages/:id" element={<ConversationDetailPage />} />
