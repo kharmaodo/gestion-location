@@ -14,6 +14,7 @@ import com.location.contrats.entity.AvenantEntity;
 import com.location.contrats.entity.ContratEntity;
 import com.location.contrats.repository.AvenantRepository;
 import com.location.contrats.repository.ContratRepository;
+import com.location.locataires.entity.DossierEntity;
 import com.location.locataires.repository.DossierRepository;
 import com.location.shared.exception.ApiException;
 import java.math.BigDecimal;
@@ -57,6 +58,18 @@ public class ContratService {
         return contrats.findByProprietaireIdOrderByMajLeDesc(proprietaireId).stream()
                 .map(c -> toDto(c, false))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContratResponse> listerPourUtilisateur(UUID userId, String authorities) {
+        if (authorities != null && authorities.contains("PROPRIETAIRE")) {
+            return lister(userId);
+        }
+        List<UUID> ids = dossiers.findByUtilisateurId(userId).stream().map(DossierEntity::getId).toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return contrats.findByDossierIdIn(ids).stream().map(c -> toDto(c, false)).toList();
     }
 
     @Transactional(readOnly = true)

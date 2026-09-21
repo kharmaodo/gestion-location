@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/litiges")
-@PreAuthorize("hasRole('PROPRIETAIRE')")
 public class LitigeController {
     private final LitigeService service;
 
@@ -29,17 +28,20 @@ public class LitigeController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE')")
     public List<LitigeResponse> lister(Authentication auth) {
-        return service.lister(UUID.fromString(auth.getName()));
+        return service.lister(UUID.fromString(auth.getName()), auth.getAuthorities().toString());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE')")
     public LitigeResponse ouvrir(Authentication auth, @Valid @RequestBody LitigeRequest request) {
         return service.ouvrir(UUID.fromString(auth.getName()), request);
     }
 
     @PostMapping("/{id}/decision")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
     public LitigeResponse decider(
             Authentication auth, @PathVariable UUID id, @Valid @RequestBody LitigeDecisionRequest request) {
         return service.decider(UUID.fromString(auth.getName()), id, request);

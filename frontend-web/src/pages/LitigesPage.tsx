@@ -15,7 +15,7 @@ export function LitigesPage() {
 
   function reload() {
     litigesApi.list().then(setItems).catch((e) => setError(e.message));
-    contratsApi.list().then((list) => {
+    contratsApi.mes().then((list) => {
       setContrats(list);
       setContratId((cur) => cur || list[0]?.id || "");
     }).catch(() => setContrats([]));
@@ -70,7 +70,7 @@ export function LitigesPage() {
           <p className="text-xs text-slate-500">
             {proprio
               ? "Aucun contrat. Creez-en un d'abord."
-              : "Aucun contrat lie a votre dossier locataire."}
+              : "Aucun contrat lie a votre compte locataire (dossier.utilisateur_id)."}
           </p>
         )}
         <select className="w-full rounded-md border px-3 py-2 text-sm" value={motif} onChange={(e) => setMotif(e.target.value)}>

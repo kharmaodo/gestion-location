@@ -92,6 +92,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const contratsApi = {
   list: () => req<Contrat[]>("/api/v1/contrats"),
+  mes: () => req<Contrat[]>("/api/v1/mes-contrats"),
   get: (id: string) => req<Contrat>(`/api/v1/contrats/${id}`),
   create: (payload: unknown) => req<Contrat>("/api/v1/contrats", { method: "POST", body: JSON.stringify(payload) }),
   activer: (id: string) => req<Contrat>(`/api/v1/contrats/${id}/activation`, { method: "POST" }),
