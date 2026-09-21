@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { api, MeResponse } from "../api";
+import { api, getAccessToken, MeResponse } from "../api";
 import { Certificat, Contacts, Contrat, EtatLieux, Restitution, Signature, contratsApi } from "../contrats";
 import { locatairesApi } from "../locataires";
+
+const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 export function ContratDetailPage() {
   const { id } = useParams();
@@ -28,6 +30,17 @@ export function ContratDetailPage() {
   const nomProprio = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "";
   const nomLoc = contacts?.locataire?.nom || nomLocataire;
 
+  async function nomDepuisReservation(reservationId?: string, uniteId?: string) {
+    const token = getAccessToken();
+    const res = await fetch(`${API}/api/v1/reservations`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) return;
+    const list = (await res.json()) as { id: string; uniteId?: string; prenom?: string; nom?: string }[];
+    const r = list.find((x) => x.id === reservationId) ?? list.find((x) => x.uniteId === uniteId);
+    if (r) setNomLocataire([r.prenom, r.nom].filter(Boolean).join(" "));
+  }
+
   function reload() {
     if (!id) return;
     contratsApi.get(id).then((c) => {
@@ -35,7 +48,9 @@ export function ContratDetailPage() {
       if (c.dossierId) {
         locatairesApi.get(c.dossierId).then((d) => {
           setNomLocataire([d.prenom, d.nom].filter(Boolean).join(" "));
-        }).catch(() => undefined);
+        }).catch(() => void nomDepuisReservation(c.reservationId, c.uniteId));
+      } else {
+        void nomDepuisReservation(c.reservationId, c.uniteId);
       }
     }).catch((e) => setError(e.message));
     contratsApi.contacts(id).then(setContacts).catch(() => setContacts(null));
@@ -149,12 +164,7 @@ export function ContratDetailPage() {
             <option value="PROPRIETAIRE">Proprietaire</option>
             <option value="LOCATAIRE">Locataire</option>
           </select>
-          <input
-            className="min-w-[10rem] flex-1 rounded-md border bg-slate-50 px-2 py-1"
-            value={nomSign}
-            disabled
-            readOnly
-          />
+          <input className="min-w-[10rem] flex-1 rounded-md border bg-slate-50 px-2 py-1" value={nomSign} disabled readOnly />
           <button className="rounded-md bg-primary px-3 py-1 text-white" disabled={!nomSign}>Inviter</button>
         </form>
       </section>
@@ -213,20 +223,17 @@ export function ContratDetailPage() {
           <p>Reparations EDL sortie : {resti.coutReparations} {resti.devise}</p>
           <p>Retenu : {resti.montantRetenu} {resti.devise}</p>
           <p className="font-medium">A restituer : {resti.montantRestitue} {resti.devise}</p>
-          <p className="mt-1 text-xs text-slate-500">EDL sortie valide : {resti.edlSortieValide ? "oui" : "non"}</p>
         </section>
       )}
       {cert && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
           <h2 className="mb-2 font-medium">Attestation de location</h2>
           <p>{String(cert.attestation ?? JSON.stringify(cert, null, 2))}</p>
-          <p className="mt-2 text-slate-600">{cert.statut} · {cert.loyer} {cert.devise} / {cert.periodicite}</p>
-          <p className="text-slate-500">{cert.dateDebut} → {cert.dateFin ?? "—"}</p>
         </section>
       )}
       <ul className="mt-6 space-y-2 text-sm">
         {(contrat.avenants ?? []).map((a) => (
-          <li key={a.id} className="rounded-lg bg-white p-3 shadow">{a.dateEffet} — {a.motif} {a.periodicite ?? ""} {a.loyer ?? ""}</li>
+          <li key={a.id} className="rounded-lg bg-white p-3 shadow">{a.dateEffet} — {a.motif}</li>
         ))}
       </ul>
       {contrat.statut === "ACTIF" && (
