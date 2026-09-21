@@ -51,12 +51,11 @@ export function AnnoncesPage() {
         <input className="rounded-md border px-3 py-2" placeholder="Ville" value={ville} onChange={(e) => setVille(e.target.value)} />
         <select className="rounded-md border px-3 py-2" value={type} onChange={(e) => setType(e.target.value)}>
           <option value="">Tous types</option>
+          <option value="CHAMBRE_SIMPLE">Chambre simple</option>
+          <option value="CHAMBRE_SDB">Chambre + SDB</option>
           <option value="STUDIO">Studio</option>
-          <option value="F1">F1</option>
-          <option value="F2">F2</option>
-          <option value="F3">F3</option>
-          <option value="VILLA">Villa</option>
-          <option value="BUREAU">Bureau</option>
+          <option value="APPARTEMENT">Appartement</option>
+          <option value="MAISON">Maison</option>
         </select>
         <input className="rounded-md border px-3 py-2" placeholder="Loyer max" value={loyerMax} onChange={(e) => setLoyerMax(e.target.value)} />
         <button className="rounded-md bg-primary px-4 py-2 text-white">Filtrer</button>
@@ -75,7 +74,12 @@ export function AnnoncesPage() {
           </Link>
         ))}
       </div>
-      {filtered.length === 0 && !error && <p className="text-sm text-slate-500">Aucune annonce.</p>}
+      {filtered.length === 0 && !error && (
+        <p className="text-sm text-slate-500">
+          Aucune annonce publiee. Pour apparaitre ici : Mes biens → unite → au moins 3 photos → Publier.
+          Les unites occupees restent hors vitrine.
+        </p>
+      )}
     </main>
   );
 }
