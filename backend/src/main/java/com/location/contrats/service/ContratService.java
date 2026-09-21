@@ -16,6 +16,8 @@ import com.location.contrats.repository.AvenantRepository;
 import com.location.contrats.repository.ContratRepository;
 import com.location.locataires.entity.DossierEntity;
 import com.location.locataires.repository.DossierRepository;
+import com.location.reservations.entity.ReservationEntity;
+import com.location.reservations.repository.ReservationRepository;
 import com.location.shared.exception.ApiException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -36,6 +38,7 @@ public class ContratService {
     private final UniteLocativeRepository unites;
     private final BienImmobilierRepository biens;
     private final DossierRepository dossiers;
+    private final ReservationRepository reservations;
     private final CautionService cautions;
 
     public ContratService(
@@ -44,12 +47,14 @@ public class ContratService {
             UniteLocativeRepository unites,
             BienImmobilierRepository biens,
             DossierRepository dossiers,
+            ReservationRepository reservations,
             CautionService cautions) {
         this.contrats = contrats;
         this.avenants = avenants;
         this.unites = unites;
         this.biens = biens;
         this.dossiers = dossiers;
+        this.reservations = reservations;
         this.cautions = cautions;
     }
 
@@ -86,9 +91,24 @@ public class ContratService {
         if (!bien.getProprietaireId().equals(proprietaireId)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Unite introuvable");
         }
-        if (req.dossierId() != null) {
-            dossiers.findByIdAndProprietaireId(req.dossierId(), proprietaireId)
+        UUID dossierId = req.dossierId();
+        if (dossierId != null) {
+            dossiers.findByIdAndProprietaireId(dossierId, proprietaireId)
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Dossier introuvable"));
+        }
+        if (req.reservationId() != null) {
+            ReservationEntity r = reservations.findByIdAndProprietaireId(req.reservationId(), proprietaireId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Reservation introuvable"));
+            if (dossierId == null) {
+                dossierId = dossierDepuisReservation(proprietaireId, r);
+            } else if (r.getLocataireUserId() != null) {
+                dossiers.findById(dossierId).ifPresent(d -> {
+                    if (d.getUtilisateurId() == null) {
+                        d.setUtilisateurId(r.getLocataireUserId());
+                        dossiers.save(d);
+                    }
+                });
+            }
         }
         if (contrats.existsByUniteIdAndStatut(unite.getId(), "ACTIF")) {
             throw new ApiException(HttpStatus.CONFLICT, "un contrat actif existe deja sur cette unite");
@@ -97,10 +117,12 @@ public class ContratService {
         e.setId(UUID.randomUUID());
         e.setProprietaireId(proprietaireId);
         e.setUniteId(unite.getId());
-        e.setDossierId(req.dossierId());
+        e.setDossierId(dossierId);
         e.setReservationId(req.reservationId());
         e.setDateDebut(req.dateDebut());
-        e.setDateFin(req.dateFin());
+        e.setDateFin(req.dateFin() != null ? req.dateFin() : (req.reservationId() != null
+                ? reservations.findById(req.reservationId()).map(ReservationEntity::getDateFin).orElse(null)
+                : null));
         e.setLoyer(req.loyer() != null ? req.loyer() : unite.getLoyer());
         e.setPeriodicite(normalizePer(req.periodicite() != null ? req.periodicite() : unite.getPeriodicite()));
         e.setJourEcheance(req.jourEcheance() != null ? req.jourEcheance() : unite.getJourEcheance());
@@ -108,6 +130,25 @@ public class ContratService {
         e.setCaution(req.caution());
         contrats.save(e);
         return toDto(e, true);
+    }
+
+    private UUID dossierDepuisReservation(UUID proprietaireId, ReservationEntity r) {
+        if (r.getLocataireUserId() != null) {
+            List<DossierEntity> existants = dossiers.findByUtilisateurId(r.getLocataireUserId());
+            if (!existants.isEmpty()) {
+                return existants.get(0).getId();
+            }
+        }
+        DossierEntity d = new DossierEntity();
+        d.setId(UUID.randomUUID());
+        d.setProprietaireId(proprietaireId);
+        d.setUtilisateurId(r.getLocataireUserId());
+        d.setNom(r.getNom() == null || r.getNom().isBlank() ? "Locataire" : r.getNom());
+        d.setPrenom(r.getPrenom());
+        d.setTelephone(r.getTelephone());
+        d.setEmail(r.getEmail());
+        dossiers.save(d);
+        return d.getId();
     }
 
     @Transactional
