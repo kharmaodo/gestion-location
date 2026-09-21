@@ -52,13 +52,15 @@ export function AppShell() {
   function onSearch(e: FormEvent) {
     e.preventDefault();
     const query = q.trim();
-    const target = proprio
-      ? location.pathname.startsWith("/locataires")
-        ? "/locataires"
-        : location.pathname.startsWith("/contrats")
-          ? "/contrats"
-          : "/biens"
-      : "/annonces";
+    const target = location.pathname.startsWith("/annonces")
+      ? "/annonces"
+      : proprio
+        ? location.pathname.startsWith("/locataires")
+          ? "/locataires"
+          : location.pathname.startsWith("/contrats")
+            ? "/contrats"
+            : "/biens"
+        : "/annonces";
     navigate(query ? `${target}?q=${encodeURIComponent(query)}` : target);
   }
 
