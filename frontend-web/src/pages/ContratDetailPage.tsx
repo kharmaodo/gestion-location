@@ -1,10 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Contrat, contratsApi } from "../contrats";
+import { Certificat, Contrat, contratsApi } from "../contrats";
 
 export function ContratDetailPage() {
   const { id } = useParams();
   const [contrat, setContrat] = useState<Contrat | null>(null);
+  const [cert, setCert] = useState<Certificat | null>(null);
   const [motif, setMotif] = useState("Changement de periodicite");
   const [periodicite, setPeriodicite] = useState("MENSUEL");
   const [loyer, setLoyer] = useState("");
@@ -34,6 +35,14 @@ export function ContratDetailPage() {
       setError(err instanceof Error ? err.message : "Erreur");
     }
   }
+  async function attestation() {
+    if (!id) return;
+    try {
+      setCert(await contratsApi.certificat(id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Attestation indisponible");
+    }
+  }
 
   if (!contrat) return <p className="p-8">{error ?? "Chargement..."}</p>;
   return (
@@ -42,10 +51,19 @@ export function ContratDetailPage() {
       <h1 className="mt-2 text-2xl font-semibold text-primary">Contrat {contrat.statut}</h1>
       <p className="text-sm">{contrat.loyer} {contrat.devise} / {contrat.periodicite} · {contrat.dateDebut}</p>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         {contrat.statut === "BROUILLON" && <button className="rounded-md bg-primary px-3 py-2 text-sm text-white" onClick={activer}>Activer</button>}
         {contrat.statut === "ACTIF" && <button className="rounded-md border px-3 py-2 text-sm" onClick={resilier}>Resilier</button>}
+        <button className="rounded-md border px-3 py-2 text-sm" onClick={attestation}>Attestation</button>
       </div>
+      {cert && (
+        <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
+          <h2 className="mb-2 font-medium">Attestation de location</h2>
+          <p>{String(cert.attestation ?? JSON.stringify(cert, null, 2))}</p>
+          <p className="mt-2 text-slate-600">{cert.statut} · {cert.loyer} {cert.devise} / {cert.periodicite}</p>
+          <p className="text-slate-500">{cert.dateDebut} → {cert.dateFin ?? "—"}</p>
+        </section>
+      )}
       <ul className="mt-6 space-y-2 text-sm">
         {(contrat.avenants ?? []).map((a) => (
           <li key={a.id} className="rounded-lg bg-white p-3 shadow">{a.dateEffet} — {a.motif} {a.periodicite ?? ""} {a.loyer ?? ""}</li>
