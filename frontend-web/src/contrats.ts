@@ -46,6 +46,16 @@ export type Contacts = {
   locataire?: ContactPartie;
 };
 
+export type Restitution = {
+  contratId: string;
+  cautionInitiale: number;
+  coutReparations: number;
+  montantRetenu: number;
+  montantRestitue: number;
+  edlSortieValide: boolean;
+  devise: string;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -70,4 +80,5 @@ export const contratsApi = {
     req<Contrat>(`/api/v1/contrats/${id}/avenants`, { method: "POST", body: JSON.stringify(payload) }),
   certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),
   contacts: (id: string) => req<Contacts>(`/api/v1/contrats/${id}/contacts`),
+  restitution: (id: string) => req<Restitution>(`/api/v1/contrats/${id}/restitution-caution`),
 };
