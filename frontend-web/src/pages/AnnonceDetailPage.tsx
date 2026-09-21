@@ -13,9 +13,11 @@ export function AnnonceDetailPage() {
   const [debut, setDebut] = useState("");
   const [fin, setFin] = useState("");
   const [message, setMessage] = useState("");
+  const [creneau, setCreneau] = useState("");
   const [note, setNote] = useState("5");
   const [commentaire, setCommentaire] = useState("");
   const [ok, setOk] = useState(false);
+  const [okVisite, setOkVisite] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function loadAvis() {
@@ -37,6 +39,22 @@ export function AnnonceDetailPage() {
       setOk(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reservation impossible");
+    }
+  }
+
+  async function visiter(e: FormEvent) {
+    e.preventDefault();
+    if (!id || !creneau) return;
+    try {
+      await vitrineApi.visiter({
+        uniteId: id,
+        nom,
+        telephone,
+        creneau: new Date(creneau).toISOString(),
+      });
+      setOkVisite(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Visite impossible");
     }
   }
 
@@ -85,7 +103,16 @@ export function AnnonceDetailPage() {
           <p className="mt-2 text-xs text-slate-500">Connectez-vous pour laisser un avis.</p>
         )}
       </section>
-      {ok ? <p className="mt-6 text-emerald-700">Demande envoyee.</p> : (
+      {okVisite ? <p className="mt-6 text-emerald-700">Demande de visite envoyee.</p> : (
+        <form className="mt-6 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={visiter}>
+          <h2 className="font-medium">Demander une visite</h2>
+          <input className="w-full rounded-md border px-3 py-2" placeholder="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
+          <input className="w-full rounded-md border px-3 py-2" placeholder="Telephone" value={telephone} onChange={(e) => setTelephone(e.target.value)} />
+          <input type="datetime-local" className="w-full rounded-md border px-3 py-2" value={creneau} onChange={(e) => setCreneau(e.target.value)} required />
+          <button className="rounded-md border px-4 py-2 text-sm">Envoyer la demande</button>
+        </form>
+      )}
+      {ok ? <p className="mt-6 text-emerald-700">Reservation envoyee.</p> : (
         <form className="mt-6 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={reserver}>
           <h2 className="font-medium">Reserver</h2>
           <input className="w-full rounded-md border px-3 py-2" placeholder="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
