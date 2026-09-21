@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/contrats")
-@PreAuthorize("hasRole('PROPRIETAIRE')")
 public class ContratController {
     private final ContratService service;
 
@@ -31,27 +30,32 @@ public class ContratController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE')")
     public List<ContratResponse> lister(Authentication auth) {
-        return service.lister(UUID.fromString(auth.getName()));
+        return service.listerPourUtilisateur(UUID.fromString(auth.getName()), auth.getAuthorities().toString());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
     public ContratResponse detail(Authentication auth, @PathVariable UUID id) {
         return service.detail(UUID.fromString(auth.getName()), id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
     public ContratResponse creer(Authentication auth, @Valid @RequestBody ContratRequest request) {
         return service.creer(UUID.fromString(auth.getName()), request);
     }
 
     @PostMapping("/{id}/activation")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
     public ContratResponse activer(Authentication auth, @PathVariable UUID id) {
         return service.activer(UUID.fromString(auth.getName()), id);
     }
 
     @PostMapping("/{id}/resiliation")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
     public ResiliationResponse resilier(
             Authentication auth, @PathVariable UUID id, @RequestBody(required = false) ResiliationRequest request) {
         return service.resilier(UUID.fromString(auth.getName()), id, request);
@@ -59,6 +63,7 @@ public class ContratController {
 
     @PostMapping("/{id}/avenants")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
     public ContratResponse avenant(
             Authentication auth, @PathVariable UUID id, @Valid @RequestBody AvenantRequest request) {
         return service.avenant(UUID.fromString(auth.getName()), id, request);
