@@ -8,6 +8,7 @@ const PRO_LINKS = [
   { to: "/biens", key: "nav.biens" },
   { to: "/locataires", key: "nav.locataires" },
   { to: "/contrats", key: "nav.contrats" },
+  { to: "/caution", key: "Caution" },
   { to: "/loyers", key: "nav.loyers" },
   { to: "/visites", key: "nav.visites" },
   { to: "/reservations", key: "Reservations" },
@@ -18,6 +19,7 @@ const PRO_LINKS = [
 const LOC_LINKS = [
   { to: "/", key: "Tableau de bord", end: true },
   { to: "/annonces", key: "Annonces" },
+  { to: "/caution", key: "Caution" },
   { to: "/messages", key: "nav.messages" },
   { to: "/securite", key: "Securite" },
 ];
