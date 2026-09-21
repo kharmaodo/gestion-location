@@ -26,6 +26,18 @@ export type Contrat = {
   avenants?: Avenant[];
 };
 
+export type Certificat = {
+  contratId: string;
+  statut: string;
+  dateDebut: string;
+  dateFin?: string;
+  loyer: number;
+  devise: string;
+  periodicite: string;
+  attestation?: string;
+  [key: string]: unknown;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -48,4 +60,5 @@ export const contratsApi = {
   resilier: (id: string) => req<Contrat>(`/api/v1/contrats/${id}/resiliation`, { method: "POST" }),
   avenant: (id: string, payload: unknown) =>
     req<Contrat>(`/api/v1/contrats/${id}/avenants`, { method: "POST", body: JSON.stringify(payload) }),
+  certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),
 };
