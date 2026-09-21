@@ -1,11 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Certificat, Contrat, contratsApi } from "../contrats";
+import { Certificat, Contacts, Contrat, contratsApi } from "../contrats";
 
 export function ContratDetailPage() {
   const { id } = useParams();
   const [contrat, setContrat] = useState<Contrat | null>(null);
   const [cert, setCert] = useState<Certificat | null>(null);
+  const [contacts, setContacts] = useState<Contacts | null>(null);
   const [motif, setMotif] = useState("Changement de periodicite");
   const [periodicite, setPeriodicite] = useState("MENSUEL");
   const [loyer, setLoyer] = useState("");
@@ -13,7 +14,9 @@ export function ContratDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   function reload() {
-    if (id) contratsApi.get(id).then(setContrat).catch((e) => setError(e.message));
+    if (!id) return;
+    contratsApi.get(id).then(setContrat).catch((e) => setError(e.message));
+    contratsApi.contacts(id).then(setContacts).catch(() => setContacts(null));
   }
   useEffect(reload, [id]);
 
@@ -56,6 +59,29 @@ export function ContratDetailPage() {
         {contrat.statut === "ACTIF" && <button className="rounded-md border px-3 py-2 text-sm" onClick={resilier}>Resilier</button>}
         <button className="rounded-md border px-3 py-2 text-sm" onClick={attestation}>Attestation</button>
       </div>
+      {contacts && (
+        <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
+          <h2 className="mb-2 font-medium">Contacts</h2>
+          {contacts.revele ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-slate-500">Proprietaire</p>
+                <p>{contacts.proprietaire?.nom ?? "—"}</p>
+                <p>{contacts.proprietaire?.email ?? "—"}</p>
+                <p>{contacts.proprietaire?.telephone ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Locataire</p>
+                <p>{contacts.locataire?.nom ?? "—"}</p>
+                <p>{contacts.locataire?.email ?? "—"}</p>
+                <p>{contacts.locataire?.telephone ?? "—"}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-slate-500">{contacts.motif ?? "Contacts masques tant que le contrat n'est pas signe des deux cotes."}</p>
+          )}
+        </section>
+      )}
       {cert && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
           <h2 className="mb-2 font-medium">Attestation de location</h2>
