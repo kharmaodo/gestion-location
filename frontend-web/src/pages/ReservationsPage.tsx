@@ -51,6 +51,14 @@ export function ReservationsPage() {
                 <button className="rounded-md bg-red-700 px-3 py-1 text-sm text-white" onClick={() => decide(r.id, "REFUSEE")}>Refuser</button>
               </div>
             )}
+            {r.statut === "ACCEPTEE" && (
+              <Link
+                className="mt-2 inline-block rounded-md bg-primary px-3 py-1 text-sm text-white"
+                to={`/contrats/nouveau?reservationId=${r.id}&uniteId=${r.uniteId}&dateDebut=${r.dateDebut}`}
+              >
+                Creer le contrat
+              </Link>
+            )}
           </div>
         ))}
       </div>
