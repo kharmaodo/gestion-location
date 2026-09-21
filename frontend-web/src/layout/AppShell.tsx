@@ -11,6 +11,7 @@ const PRO_LINKS = [
   { to: "/contrats", key: "nav.contrats" },
   { to: "/caution", key: "Caution" },
   { to: "/loyers", key: "nav.loyers" },
+  { to: "/litiges", key: "Litiges" },
   { to: "/visites", key: "nav.visites" },
   { to: "/reservations", key: "Reservations" },
   { to: "/messages", key: "nav.messages" },
