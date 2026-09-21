@@ -1,10 +1,14 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { api, MeResponse } from "../api";
 import { Certificat, Contacts, Contrat, EtatLieux, Restitution, Signature, contratsApi } from "../contrats";
+import { locatairesApi } from "../locataires";
 
 export function ContratDetailPage() {
   const { id } = useParams();
   const [contrat, setContrat] = useState<Contrat | null>(null);
+  const [me, setMe] = useState<MeResponse | null>(null);
+  const [nomLocataire, setNomLocataire] = useState("");
   const [cert, setCert] = useState<Certificat | null>(null);
   const [contacts, setContacts] = useState<Contacts | null>(null);
   const [resti, setResti] = useState<Restitution | null>(null);
@@ -21,14 +25,31 @@ export function ContratDetailPage() {
   const [dateEffet, setDateEffet] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const nomProprio = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "";
+  const nomLoc = contacts?.locataire?.nom || nomLocataire;
+
   function reload() {
     if (!id) return;
-    contratsApi.get(id).then(setContrat).catch((e) => setError(e.message));
+    contratsApi.get(id).then((c) => {
+      setContrat(c);
+      if (c.dossierId) {
+        locatairesApi.get(c.dossierId).then((d) => {
+          setNomLocataire([d.prenom, d.nom].filter(Boolean).join(" "));
+        }).catch(() => undefined);
+      }
+    }).catch((e) => setError(e.message));
     contratsApi.contacts(id).then(setContacts).catch(() => setContacts(null));
     contratsApi.signatures(id).then(setSigs).catch(() => setSigs([]));
     contratsApi.etatsLieux(id).then(setEdls).catch(() => setEdls([]));
   }
-  useEffect(reload, [id]);
+  useEffect(() => {
+    api.me().then(setMe).catch(() => undefined);
+    reload();
+  }, [id]);
+
+  useEffect(() => {
+    setNomSign(role === "PROPRIETAIRE" ? nomProprio : nomLoc);
+  }, [role, nomProprio, nomLoc]);
 
   async function activer() {
     if (!id) return;
@@ -58,10 +79,13 @@ export function ContratDetailPage() {
   }
   async function inviter(e: FormEvent) {
     e.preventDefault();
-    if (!id || !nomSign.trim()) return;
+    const nom = (role === "PROPRIETAIRE" ? nomProprio : nomLoc).trim();
+    if (!id || !nom) {
+      setError(role === "LOCATAIRE" ? "Aucun locataire lie au contrat." : "Profil proprietaire incomplet.");
+      return;
+    }
     try {
-      await contratsApi.inviter({ contratId: id, roleSignataire: role, nomSignataire: nomSign.trim() });
-      setNomSign("");
+      await contratsApi.inviter({ contratId: id, roleSignataire: role, nomSignataire: nom });
       reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invitation impossible");
@@ -125,8 +149,13 @@ export function ContratDetailPage() {
             <option value="PROPRIETAIRE">Proprietaire</option>
             <option value="LOCATAIRE">Locataire</option>
           </select>
-          <input className="min-w-[10rem] flex-1 rounded-md border px-2 py-1" placeholder="Nom du signataire" value={nomSign} onChange={(e) => setNomSign(e.target.value)} />
-          <button className="rounded-md bg-primary px-3 py-1 text-white">Inviter</button>
+          <input
+            className="min-w-[10rem] flex-1 rounded-md border bg-slate-50 px-2 py-1"
+            value={nomSign}
+            disabled
+            readOnly
+          />
+          <button className="rounded-md bg-primary px-3 py-1 text-white" disabled={!nomSign}>Inviter</button>
         </form>
       </section>
       <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
