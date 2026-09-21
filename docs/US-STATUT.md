@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au 2026-09-21, `feat/us-29-alertes-ui-2`.
+Inventaire au 2026-09-21, `feat/us-23-docs-ui`.
 
 ## Fait
 
@@ -20,6 +20,6 @@ US-01 à 08, 14–16, 21, 24–28.
 | US-19 | Inbox + SSE ; pas de FCM |
 | US-20 | Email Mailhog ; pas de SMS ni cron |
 | US-22 | Attestation JSON ; pas de PDF signé |
-| US-23 | Liste + upload + meta URL ; pas d’UI |
+| US-23 | Liste + fichier + URL sur fiche dossier |
 | US-29 | Liste alertes dashboard ; pas de cron |
 | US-30 | Nav + shell FR/EN/WO ; pages restantes en dur |

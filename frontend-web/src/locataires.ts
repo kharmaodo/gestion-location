@@ -6,6 +6,7 @@ export type DocumentKyc = {
   id: string;
   type: string;
   nomFichier: string;
+  chemin?: string;
   mime?: string;
   kycStatut: string;
 };
@@ -45,10 +46,16 @@ export const locatairesApi = {
   create: (payload: unknown) => req<Dossier>("/api/v1/locataires", { method: "POST", body: JSON.stringify(payload) }),
   kyc: (id: string, statut: string, commentaire?: string) =>
     req<Dossier>(`/api/v1/locataires/${id}/kyc`, { method: "POST", body: JSON.stringify({ statut, commentaire }) }),
+  documents: (id: string) => req<DocumentKyc[]>(`/api/v1/locataires/${id}/documents`),
   upload: (id: string, type: string, file: File) => {
     const fd = new FormData();
     fd.append("type", type);
     fd.append("file", file);
     return req<DocumentKyc>(`/api/v1/locataires/${id}/documents`, { method: "POST", body: fd });
   },
+  addMeta: (id: string, payload: { type: string; nomFichier: string; chemin: string; mime?: string }) =>
+    req<DocumentKyc>(`/api/v1/locataires/${id}/documents/meta`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
