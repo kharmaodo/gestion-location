@@ -26,6 +26,19 @@ export type Contrat = {
   avenants?: Avenant[];
 };
 
+export type Certificat = {
+  contratId: string;
+  type: string;
+  statutContrat: string;
+  locataire: string;
+  bien: string;
+  unite: string;
+  dateDebut: string;
+  dateFin?: string;
+  texte: string;
+  emisLe: string;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -36,7 +49,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.detail ?? "Erreur API");
+  if (!res.ok) throw new Error(body.detail ?? body.message ?? "Erreur API");
   return body as T;
 }
 
@@ -48,4 +61,5 @@ export const contratsApi = {
   resilier: (id: string) => req<Contrat>(`/api/v1/contrats/${id}/resiliation`, { method: "POST" }),
   avenant: (id: string, payload: unknown) =>
     req<Contrat>(`/api/v1/contrats/${id}/avenants`, { method: "POST", body: JSON.stringify(payload) }),
+  certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),
 };

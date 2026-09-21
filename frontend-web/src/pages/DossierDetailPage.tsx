@@ -9,6 +9,7 @@ export function DossierDetailPage() {
   const [file, setFile] = useState<File | null>(null);
   const [commentaire, setCommentaire] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   function reload() {
     if (id) locatairesApi.get(id).then(setDossier).catch((e) => setError(e.message));
@@ -21,19 +22,26 @@ export function DossierDetailPage() {
     try {
       await locatairesApi.upload(id, type, file);
       setFile(null);
+      setError(null);
       reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload impossible");
     }
   }
 
-  async function decide(statut: string) {
-    if (!id) return;
+  async function decide(e: FormEvent, statut: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!id || busy) return;
+    setBusy(true);
+    setError(null);
     try {
-      await locatairesApi.kyc(id, statut, commentaire);
-      reload();
+      const maj = await locatairesApi.kyc(id, statut, commentaire || statut);
+      setDossier(maj);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Decision impossible");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -59,16 +67,20 @@ export function DossierDetailPage() {
           <option value="AUTRE">Autre</option>
         </select>
         <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        <button className="rounded-md bg-primary px-4 py-2 text-sm text-white">Telecharger</button>
+        <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-white">Telecharger</button>
       </form>
-      <div className="mt-6 space-y-2 rounded-lg bg-white p-4 shadow">
+      <form className="mt-6 space-y-2 rounded-lg bg-white p-4 shadow" onSubmit={(e) => decide(e, "VALIDE")}>
         <h2 className="font-medium">Decision KYC</h2>
         <textarea className="w-full rounded-md border px-3 py-2 text-sm" placeholder="Commentaire" value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
         <div className="flex gap-2">
-          <button className="rounded-md bg-emerald-700 px-3 py-2 text-sm text-white" onClick={() => decide("VALIDE")}>Valider</button>
-          <button className="rounded-md bg-red-700 px-3 py-2 text-sm text-white" onClick={() => decide("REJETE")}>Rejeter</button>
+          <button type="submit" disabled={busy} className="rounded-md bg-emerald-700 px-3 py-2 text-sm text-white">
+            {busy ? "..." : "Valider"}
+          </button>
+          <button type="button" disabled={busy} className="rounded-md bg-red-700 px-3 py-2 text-sm text-white" onClick={(e) => decide(e, "REJETE")}>
+            Rejeter
+          </button>
         </div>
-      </div>
+      </form>
     </main>
   );
 }
