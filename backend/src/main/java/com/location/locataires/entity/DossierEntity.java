@@ -38,6 +38,8 @@ public class DossierEntity {
     public void setId(UUID id) { this.id = id; }
     public UUID getProprietaireId() { return proprietaireId; }
     public void setProprietaireId(UUID proprietaireId) { this.proprietaireId = proprietaireId; }
+    public UUID getUtilisateurId() { return utilisateurId; }
+    public void setUtilisateurId(UUID utilisateurId) { this.utilisateurId = utilisateurId; }
     public String getPrenom() { return prenom; }
     public void setPrenom(String prenom) { this.prenom = prenom; }
     public String getNom() { return nom; }
