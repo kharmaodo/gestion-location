@@ -33,10 +33,11 @@ export type Media = { id: string; uniteId: string; url: string; type: string; po
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
+  const isFd = init?.body instanceof FormData;
   const res = await fetch(`${API}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFd ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
@@ -69,4 +70,10 @@ export const biensApi = {
       method: "POST",
       body: JSON.stringify({ url, type: "PHOTO" }),
     }),
+  uploadMedia: (uniteId: string, file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("type", "PHOTO");
+    return req<Media>(`/api/v1/unites/${uniteId}/medias/upload`, { method: "POST", body: fd });
+  },
 };
