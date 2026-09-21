@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Dossier, locatairesApi } from "../locataires";
 
 export function LocatairesPage() {
   const [params] = useSearchParams();
+  const location = useLocation();
+  const flash = (location.state as { kycStatut?: string } | null)?.kycStatut;
   const q = (params.get("q") ?? "").toLowerCase();
   const [items, setItems] = useState<Dossier[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +27,7 @@ export function LocatairesPage() {
         <h1 className="text-2xl font-semibold text-primary">Locataires</h1>
         <Link className="rounded-md bg-primary px-4 py-2 text-sm text-white" to="/locataires/nouveau">+ Dossier</Link>
       </div>
+      {flash && <p className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm">KYC mis à jour : {flash}</p>}
       {q && <p className="mb-3 text-sm text-slate-500">Filtre : {q}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="space-y-3">

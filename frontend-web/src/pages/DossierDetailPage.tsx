@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { DocumentKyc, Dossier, locatairesApi } from "../locataires";
 
 export function DossierDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [docs, setDocs] = useState<DocumentKyc[]>([]);
   const [type, setType] = useState("CNI");
@@ -54,11 +55,10 @@ export function DossierDetailPage() {
     setBusy(true);
     setError(null);
     try {
-      const maj = await locatairesApi.kyc(id, statut, commentaire || statut);
-      setDossier(maj);
+      await locatairesApi.kyc(id, statut, commentaire || statut);
+      navigate("/locataires", { replace: true, state: { kycId: id, kycStatut: statut } });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Decision impossible");
-    } finally {
       setBusy(false);
     }
   }
