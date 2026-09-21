@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Certificat, Contacts, Contrat, Restitution, contratsApi } from "../contrats";
+import { Certificat, Contacts, Contrat, Restitution, Signature, contratsApi } from "../contrats";
 
 export function ContratDetailPage() {
   const { id } = useParams();
@@ -8,6 +8,9 @@ export function ContratDetailPage() {
   const [cert, setCert] = useState<Certificat | null>(null);
   const [contacts, setContacts] = useState<Contacts | null>(null);
   const [resti, setResti] = useState<Restitution | null>(null);
+  const [sigs, setSigs] = useState<Signature[]>([]);
+  const [role, setRole] = useState("PROPRIETAIRE");
+  const [nomSign, setNomSign] = useState("");
   const [motif, setMotif] = useState("Changement de periodicite");
   const [periodicite, setPeriodicite] = useState("MENSUEL");
   const [loyer, setLoyer] = useState("");
@@ -18,6 +21,7 @@ export function ContratDetailPage() {
     if (!id) return;
     contratsApi.get(id).then(setContrat).catch((e) => setError(e.message));
     contratsApi.contacts(id).then(setContacts).catch(() => setContacts(null));
+    contratsApi.signatures(id).then(setSigs).catch(() => setSigs([]));
   }
   useEffect(reload, [id]);
 
@@ -41,18 +45,31 @@ export function ContratDetailPage() {
   }
   async function attestation() {
     if (!id) return;
-    try {
-      setCert(await contratsApi.certificat(id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Attestation indisponible");
-    }
+    try { setCert(await contratsApi.certificat(id)); } catch (e) { setError(e instanceof Error ? e.message : "Attestation indisponible"); }
   }
   async function restitution() {
     if (!id) return;
+    try { setResti(await contratsApi.restitution(id)); } catch (e) { setError(e instanceof Error ? e.message : "Restitution indisponible"); }
+  }
+  async function inviter(e: FormEvent) {
+    e.preventDefault();
+    if (!id || !nomSign.trim()) return;
     try {
-      setResti(await contratsApi.restitution(id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Restitution indisponible");
+      await contratsApi.inviter({ contratId: id, roleSignataire: role, nomSignataire: nomSign.trim() });
+      setNomSign("");
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invitation impossible");
+    }
+  }
+  async function signer(lien?: string) {
+    if (!lien) return;
+    const token = lien.split("/").pop() ?? lien;
+    try {
+      await contratsApi.signer(token);
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Signature impossible");
     }
   }
 
@@ -69,6 +86,28 @@ export function ContratDetailPage() {
         <button className="rounded-md border px-3 py-2 text-sm" onClick={attestation}>Attestation</button>
         <button className="rounded-md border px-3 py-2 text-sm" onClick={restitution}>Restitution caution</button>
       </div>
+      <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
+        <h2 className="mb-2 font-medium">Signatures</h2>
+        <ul className="space-y-2">
+          {sigs.map((s) => (
+            <li key={s.id} className="flex items-center justify-between gap-2">
+              <span>{s.roleSignataire} · {s.nomSignataire} · {s.statut}</span>
+              {s.statut !== "SIGNE" && s.lien && (
+                <button className="rounded-md border px-2 py-1 text-xs" onClick={() => signer(s.lien)}>Signer</button>
+              )}
+            </li>
+          ))}
+          {sigs.length === 0 && <li className="text-slate-500">Aucune invitation.</li>}
+        </ul>
+        <form className="mt-3 flex flex-wrap gap-2" onSubmit={inviter}>
+          <select className="rounded-md border px-2 py-1" value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="PROPRIETAIRE">Proprietaire</option>
+            <option value="LOCATAIRE">Locataire</option>
+          </select>
+          <input className="min-w-[10rem] flex-1 rounded-md border px-2 py-1" placeholder="Nom du signataire" value={nomSign} onChange={(e) => setNomSign(e.target.value)} />
+          <button className="rounded-md bg-primary px-3 py-1 text-white">Inviter</button>
+        </form>
+      </section>
       {contacts && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
           <h2 className="mb-2 font-medium">Contacts</h2>
