@@ -1,3 +1,5 @@
+import { getAccessToken } from "./api";
+
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 export type Annonce = {
@@ -18,10 +20,24 @@ export type Annonce = {
 
 export type Creneau = { debut: string; fin: string; statut: string };
 
+export type Avis = {
+  id: string;
+  auteurId: string;
+  cibleUniteId: string;
+  note: number;
+  commentaire?: string;
+  creeLe: string;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init?.headers ?? {}),
+    },
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.detail ?? "Erreur API");
@@ -33,4 +49,7 @@ export const vitrineApi = {
   get: (id: string) => req<Annonce>(`/api/v1/public/annonces/${id}`),
   dispo: (id: string) => req<Creneau[]>(`/api/v1/public/annonces/${id}/disponibilites`),
   reserver: (payload: unknown) => req(`/api/v1/public/reservations`, { method: "POST", body: JSON.stringify(payload) }),
+  avis: (id: string) => req<Avis[]>(`/api/v1/public/annonces/${id}/avis`),
+  publierAvis: (payload: { cibleUniteId: string; note: number; commentaire?: string }) =>
+    req<Avis>("/api/v1/avis", { method: "POST", body: JSON.stringify(payload) }),
 };

@@ -1,23 +1,32 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Annonce, Creneau, vitrineApi } from "../vitrine";
+import { getAccessToken } from "../api";
+import { Annonce, Avis, Creneau, vitrineApi } from "../vitrine";
 
 export function AnnonceDetailPage() {
   const { id } = useParams();
   const [annonce, setAnnonce] = useState<Annonce | null>(null);
   const [creneaux, setCreneaux] = useState<Creneau[]>([]);
+  const [avis, setAvis] = useState<Avis[]>([]);
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
   const [debut, setDebut] = useState("");
   const [fin, setFin] = useState("");
   const [message, setMessage] = useState("");
+  const [note, setNote] = useState("5");
+  const [commentaire, setCommentaire] = useState("");
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function loadAvis() {
+    if (id) vitrineApi.avis(id).then(setAvis).catch(() => undefined);
+  }
 
   useEffect(() => {
     if (!id) return;
     vitrineApi.get(id).then(setAnnonce).catch((e) => setError(e.message));
     vitrineApi.dispo(id).then(setCreneaux).catch(() => undefined);
+    loadAvis();
   }, [id]);
 
   async function reserver(e: FormEvent) {
@@ -28,6 +37,18 @@ export function AnnonceDetailPage() {
       setOk(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reservation impossible");
+    }
+  }
+
+  async function publier(e: FormEvent) {
+    e.preventDefault();
+    if (!id) return;
+    try {
+      await vitrineApi.publierAvis({ cibleUniteId: id, note: Number(note), commentaire });
+      setCommentaire("");
+      loadAvis();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Avis impossible");
     }
   }
 
@@ -42,6 +63,28 @@ export function AnnonceDetailPage() {
         {creneaux.map((c, i) => <li key={i}>{c.debut} → {c.fin} ({c.statut})</li>)}
         {creneaux.length === 0 && <li className="text-slate-500">Aucune reservation.</li>}
       </ul>
+      <section className="mt-6 rounded-lg bg-white p-4 shadow">
+        <h2 className="font-medium">Avis</h2>
+        <ul className="mt-2 space-y-2 text-sm">
+          {avis.map((a) => (
+            <li key={a.id} className="border-t pt-2">
+              <span className="font-medium">{a.note}/5</span> — {a.commentaire || "—"}
+            </li>
+          ))}
+          {avis.length === 0 && <li className="text-slate-500">Aucun avis.</li>}
+        </ul>
+        {getAccessToken() ? (
+          <form className="mt-3 space-y-2" onSubmit={publier}>
+            <select className="w-full rounded-md border px-3 py-2 text-sm" value={note} onChange={(e) => setNote(e.target.value)}>
+              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} / 5</option>)}
+            </select>
+            <textarea className="w-full rounded-md border px-3 py-2 text-sm" placeholder="Commentaire" value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
+            <button className="rounded-md bg-primary px-3 py-1 text-sm text-white">Publier un avis</button>
+          </form>
+        ) : (
+          <p className="mt-2 text-xs text-slate-500">Connectez-vous pour laisser un avis.</p>
+        )}
+      </section>
       {ok ? <p className="mt-6 text-emerald-700">Demande envoyee.</p> : (
         <form className="mt-6 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={reserver}>
           <h2 className="font-medium">Reserver</h2>
