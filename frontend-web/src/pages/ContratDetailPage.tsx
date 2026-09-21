@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Certificat, Contacts, Contrat, Restitution, Signature, contratsApi } from "../contrats";
+import { Certificat, Contacts, Contrat, EtatLieux, Restitution, Signature, contratsApi } from "../contrats";
 
 export function ContratDetailPage() {
   const { id } = useParams();
@@ -9,6 +9,10 @@ export function ContratDetailPage() {
   const [contacts, setContacts] = useState<Contacts | null>(null);
   const [resti, setResti] = useState<Restitution | null>(null);
   const [sigs, setSigs] = useState<Signature[]>([]);
+  const [edls, setEdls] = useState<EtatLieux[]>([]);
+  const [edlType, setEdlType] = useState("ENTREE");
+  const [edlObs, setEdlObs] = useState("");
+  const [edlCout, setEdlCout] = useState("0");
   const [role, setRole] = useState("PROPRIETAIRE");
   const [nomSign, setNomSign] = useState("");
   const [motif, setMotif] = useState("Changement de periodicite");
@@ -22,6 +26,7 @@ export function ContratDetailPage() {
     contratsApi.get(id).then(setContrat).catch((e) => setError(e.message));
     contratsApi.contacts(id).then(setContacts).catch(() => setContacts(null));
     contratsApi.signatures(id).then(setSigs).catch(() => setSigs([]));
+    contratsApi.etatsLieux(id).then(setEdls).catch(() => setEdls([]));
   }
   useEffect(reload, [id]);
 
@@ -72,6 +77,22 @@ export function ContratDetailPage() {
       setError(err instanceof Error ? err.message : "Signature impossible");
     }
   }
+  async function creerEdl(e: FormEvent) {
+    e.preventDefault();
+    if (!id) return;
+    try {
+      await contratsApi.creerEdl({
+        contratId: id,
+        type: edlType,
+        observations: edlObs,
+        coutReparations: Number(edlCout) || 0,
+      });
+      setEdlObs("");
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "EDL impossible");
+    }
+  }
 
   if (!contrat) return <p className="p-8">{error ?? "Chargement..."}</p>;
   return (
@@ -106,6 +127,31 @@ export function ContratDetailPage() {
           </select>
           <input className="min-w-[10rem] flex-1 rounded-md border px-2 py-1" placeholder="Nom du signataire" value={nomSign} onChange={(e) => setNomSign(e.target.value)} />
           <button className="rounded-md bg-primary px-3 py-1 text-white">Inviter</button>
+        </form>
+      </section>
+      <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
+        <h2 className="mb-2 font-medium">Etats des lieux</h2>
+        <ul className="space-y-2">
+          {edls.map((e) => (
+            <li key={e.id} className="flex items-center justify-between gap-2">
+              <span>{e.type} · {e.statut} · {e.coutReparations ?? 0}</span>
+              {e.statut !== "VALIDE" && (
+                <button className="rounded-md border px-2 py-1 text-xs" onClick={() => contratsApi.validerEdl(e.id).then(reload).catch((err) => setError(err.message))}>
+                  Valider
+                </button>
+              )}
+            </li>
+          ))}
+          {edls.length === 0 && <li className="text-slate-500">Aucun EDL.</li>}
+        </ul>
+        <form className="mt-3 space-y-2" onSubmit={creerEdl}>
+          <select className="w-full rounded-md border px-2 py-1" value={edlType} onChange={(e) => setEdlType(e.target.value)}>
+            <option value="ENTREE">Entree</option>
+            <option value="SORTIE">Sortie</option>
+          </select>
+          <input className="w-full rounded-md border px-2 py-1" placeholder="Observations" value={edlObs} onChange={(e) => setEdlObs(e.target.value)} />
+          <input className="w-full rounded-md border px-2 py-1" placeholder="Cout reparations" value={edlCout} onChange={(e) => setEdlCout(e.target.value)} />
+          <button className="rounded-md bg-primary px-3 py-1 text-white">Creer EDL</button>
         </form>
       </section>
       {contacts && (
