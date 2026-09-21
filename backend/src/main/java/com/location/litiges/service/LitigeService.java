@@ -7,6 +7,8 @@ import com.location.litiges.dto.LitigeRequest;
 import com.location.litiges.dto.LitigeResponse;
 import com.location.litiges.entity.LitigeEntity;
 import com.location.litiges.repository.LitigeRepository;
+import com.location.locataires.entity.DossierEntity;
+import com.location.locataires.repository.DossierRepository;
 import com.location.shared.exception.ApiException;
 import java.time.Instant;
 import java.util.List;
@@ -22,15 +24,28 @@ public class LitigeService {
     private static final Set<String> DECISIONS = Set.of("EN_COURS", "RESOLU", "REJETE");
     private final LitigeRepository litiges;
     private final ContratRepository contrats;
+    private final DossierRepository dossiers;
 
-    public LitigeService(LitigeRepository litiges, ContratRepository contrats) {
+    public LitigeService(LitigeRepository litiges, ContratRepository contrats, DossierRepository dossiers) {
         this.litiges = litiges;
         this.contrats = contrats;
+        this.dossiers = dossiers;
     }
 
     @Transactional(readOnly = true)
-    public List<LitigeResponse> lister(UUID proprietaireId) {
-        return litiges.findByProprietaireIdOrderByMajLeDesc(proprietaireId).stream().map(this::toDto).toList();
+    public List<LitigeResponse> lister(UUID userId, String authorities) {
+        if (authorities != null && authorities.contains("PROPRIETAIRE")) {
+            return litiges.findByProprietaireIdOrderByMajLeDesc(userId).stream().map(this::toDto).toList();
+        }
+        List<UUID> dossierIds = dossiers.findByUtilisateurId(userId).stream().map(DossierEntity::getId).toList();
+        if (dossierIds.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> contratIds = contrats.findByDossierIdIn(dossierIds).stream().map(ContratEntity::getId).toList();
+        if (contratIds.isEmpty()) {
+            return List.of();
+        }
+        return litiges.findByContratIdInOrderByMajLeDesc(contratIds).stream().map(this::toDto).toList();
     }
 
     @Transactional
@@ -41,8 +56,13 @@ public class LitigeService {
         }
         ContratEntity c = contrats.findById(req.contratId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Contrat introuvable"));
-        if (!c.getProprietaireId().equals(auteurId)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "seul le proprietaire du contrat peut ouvrir un litige pour le MVP");
+        boolean proprio = c.getProprietaireId().equals(auteurId);
+        boolean locataire = c.getDossierId() != null && dossiers.findById(c.getDossierId())
+                .map(DossierEntity::getUtilisateurId)
+                .filter(auteurId::equals)
+                .isPresent();
+        if (!proprio && !locataire) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "contrat hors perimetre");
         }
         LitigeEntity e = new LitigeEntity();
         e.setId(UUID.randomUUID());
