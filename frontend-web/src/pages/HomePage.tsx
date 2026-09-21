@@ -72,7 +72,7 @@ export function HomePage() {
               to="/loyers"
               className={`block rounded-lg p-3 text-sm shadow ${al.niveau === "CRITIQUE" ? "bg-red-50" : "bg-white"}`}
             >
-              <span className="mr-2 rounded px-1.5 py-0.5 text-xs font-medium {al.niveau === "CRITIQUE" ? "bg-red-100" : "bg-slate-100"}">
+              <span className={`mr-2 rounded px-1.5 py-0.5 text-xs font-medium ${al.niveau === "CRITIQUE" ? "bg-red-100" : "bg-slate-100"}`}>
                 {al.niveau}
               </span>
               {al.message} · {al.montant} · {al.statutEcheance}
