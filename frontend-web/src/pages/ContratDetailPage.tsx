@@ -1,12 +1,13 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Certificat, Contacts, Contrat, contratsApi } from "../contrats";
+import { Certificat, Contacts, Contrat, Restitution, contratsApi } from "../contrats";
 
 export function ContratDetailPage() {
   const { id } = useParams();
   const [contrat, setContrat] = useState<Contrat | null>(null);
   const [cert, setCert] = useState<Certificat | null>(null);
   const [contacts, setContacts] = useState<Contacts | null>(null);
+  const [resti, setResti] = useState<Restitution | null>(null);
   const [motif, setMotif] = useState("Changement de periodicite");
   const [periodicite, setPeriodicite] = useState("MENSUEL");
   const [loyer, setLoyer] = useState("");
@@ -46,6 +47,14 @@ export function ContratDetailPage() {
       setError(e instanceof Error ? e.message : "Attestation indisponible");
     }
   }
+  async function restitution() {
+    if (!id) return;
+    try {
+      setResti(await contratsApi.restitution(id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Restitution indisponible");
+    }
+  }
 
   if (!contrat) return <p className="p-8">{error ?? "Chargement..."}</p>;
   return (
@@ -58,6 +67,7 @@ export function ContratDetailPage() {
         {contrat.statut === "BROUILLON" && <button className="rounded-md bg-primary px-3 py-2 text-sm text-white" onClick={activer}>Activer</button>}
         {contrat.statut === "ACTIF" && <button className="rounded-md border px-3 py-2 text-sm" onClick={resilier}>Resilier</button>}
         <button className="rounded-md border px-3 py-2 text-sm" onClick={attestation}>Attestation</button>
+        <button className="rounded-md border px-3 py-2 text-sm" onClick={restitution}>Restitution caution</button>
       </div>
       {contacts && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
@@ -80,6 +90,16 @@ export function ContratDetailPage() {
           ) : (
             <p className="text-slate-500">{contacts.motif ?? "Contacts masques tant que le contrat n'est pas signe des deux cotes."}</p>
           )}
+        </section>
+      )}
+      {resti && (
+        <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
+          <h2 className="mb-2 font-medium">Restitution de caution</h2>
+          <p>Caution initiale : {resti.cautionInitiale} {resti.devise}</p>
+          <p>Reparations EDL sortie : {resti.coutReparations} {resti.devise}</p>
+          <p>Retenu : {resti.montantRetenu} {resti.devise}</p>
+          <p className="font-medium">A restituer : {resti.montantRestitue} {resti.devise}</p>
+          <p className="mt-1 text-xs text-slate-500">EDL sortie valide : {resti.edlSortieValide ? "oui" : "non"}</p>
         </section>
       )}
       {cert && (
