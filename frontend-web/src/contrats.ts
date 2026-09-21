@@ -56,6 +56,16 @@ export type Restitution = {
   devise: string;
 };
 
+export type Signature = {
+  id: string;
+  contratId: string;
+  roleSignataire: string;
+  nomSignataire: string;
+  statut: string;
+  signeLe?: string;
+  lien?: string;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -81,4 +91,8 @@ export const contratsApi = {
   certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),
   contacts: (id: string) => req<Contacts>(`/api/v1/contrats/${id}/contacts`),
   restitution: (id: string) => req<Restitution>(`/api/v1/contrats/${id}/restitution-caution`),
+  signatures: (contratId: string) => req<Signature[]>(`/api/v1/signatures?contratId=${contratId}`),
+  inviter: (payload: { contratId: string; roleSignataire: string; nomSignataire: string }) =>
+    req<Signature>("/api/v1/signatures", { method: "POST", body: JSON.stringify(payload) }),
+  signer: (token: string) => req<Signature>(`/api/v1/public/signatures/${token}`, { method: "POST" }),
 };
