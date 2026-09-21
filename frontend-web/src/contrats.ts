@@ -66,6 +66,16 @@ export type Signature = {
   lien?: string;
 };
 
+export type EtatLieux = {
+  id: string;
+  contratId: string;
+  type: string;
+  observations?: string;
+  coutReparations?: number;
+  statut: string;
+  creeLe: string;
+};
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${API}${path}`, {
@@ -95,4 +105,8 @@ export const contratsApi = {
   inviter: (payload: { contratId: string; roleSignataire: string; nomSignataire: string }) =>
     req<Signature>("/api/v1/signatures", { method: "POST", body: JSON.stringify(payload) }),
   signer: (token: string) => req<Signature>(`/api/v1/public/signatures/${token}`, { method: "POST" }),
+  etatsLieux: (contratId: string) => req<EtatLieux[]>(`/api/v1/etats-lieux?contratId=${contratId}`),
+  creerEdl: (payload: { contratId: string; type: string; observations?: string; coutReparations?: number }) =>
+    req<EtatLieux>("/api/v1/etats-lieux", { method: "POST", body: JSON.stringify(payload) }),
+  validerEdl: (id: string) => req<EtatLieux>(`/api/v1/etats-lieux/${id}/validation`, { method: "POST" }),
 };
