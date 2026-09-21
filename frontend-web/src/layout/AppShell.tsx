@@ -22,6 +22,7 @@ const PRO_LINKS = [
 const LOC_LINKS = [
   { to: "/", key: "Tableau de bord", end: true },
   { to: "/annonces", key: "Annonces" },
+  { to: "/contrats", key: "nav.contrats" },
   { to: "/caution", key: "Caution" },
   { to: "/litiges", key: "Litiges" },
   { to: "/messages", key: "nav.messages" },
@@ -56,13 +57,13 @@ export function AppShell() {
     const query = q.trim();
     const target = location.pathname.startsWith("/annonces")
       ? "/annonces"
-      : proprio
-        ? location.pathname.startsWith("/locataires")
-          ? "/locataires"
-          : location.pathname.startsWith("/contrats")
-            ? "/contrats"
+      : location.pathname.startsWith("/contrats")
+        ? "/contrats"
+        : proprio
+          ? location.pathname.startsWith("/locataires")
+            ? "/locataires"
             : "/biens"
-        : "/annonces";
+          : "/annonces";
     navigate(query ? `${target}?q=${encodeURIComponent(query)}` : target);
   }
 
