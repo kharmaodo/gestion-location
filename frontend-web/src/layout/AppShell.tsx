@@ -23,6 +23,7 @@ const LOC_LINKS = [
   { to: "/", key: "Tableau de bord", end: true },
   { to: "/annonces", key: "Annonces" },
   { to: "/caution", key: "Caution" },
+  { to: "/litiges", key: "Litiges" },
   { to: "/messages", key: "nav.messages" },
   { to: "/notifications", key: "Notifications" },
   { to: "/securite", key: "Securite" },
