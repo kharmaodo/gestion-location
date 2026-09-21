@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api, clearSession, MeResponse } from "../api";
 import { useI18n } from "../i18n";
+import { notificationsApi } from "../notifications";
 
 const PRO_LINKS = [
   { to: "/", key: "Tableau de bord", end: true },
@@ -13,6 +14,7 @@ const PRO_LINKS = [
   { to: "/visites", key: "nav.visites" },
   { to: "/reservations", key: "Reservations" },
   { to: "/messages", key: "nav.messages" },
+  { to: "/notifications", key: "Notifications" },
   { to: "/annonces", key: "Annonces" },
 ];
 
@@ -21,6 +23,7 @@ const LOC_LINKS = [
   { to: "/annonces", key: "Annonces" },
   { to: "/caution", key: "Caution" },
   { to: "/messages", key: "nav.messages" },
+  { to: "/notifications", key: "Notifications" },
   { to: "/securite", key: "Securite" },
 ];
 
@@ -32,13 +35,15 @@ export function AppShell() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [q, setQ] = useState(params.get("q") ?? "");
   const [open, setOpen] = useState(false);
+  const [nonLues, setNonLues] = useState(0);
 
   useEffect(() => {
     api.me().then(setMe).catch(() => {
       clearSession();
       navigate("/connexion");
     });
-  }, [navigate]);
+    notificationsApi.list().then((list) => setNonLues(list.filter((n) => !n.lu).length)).catch(() => undefined);
+  }, [navigate, location.pathname]);
 
   const proprio = me?.roles.includes("PROPRIETAIRE") ?? false;
   const links = proprio ? PRO_LINKS : LOC_LINKS;
@@ -94,6 +99,9 @@ export function AppShell() {
             onChange={(e) => setQ(e.target.value)}
           />
         </form>
+        <Link to="/notifications" className="rounded-md border px-2 py-1 text-sm">
+          Notifs{nonLues > 0 ? ` (${nonLues})` : ""}
+        </Link>
         <select className="rounded-md border px-2 py-1 text-sm" value={locale} onChange={(e) => setLocale(e.target.value)}>
           <option value="fr">FR</option>
           <option value="en">EN</option>

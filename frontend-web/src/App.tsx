@@ -16,6 +16,7 @@ import { HomePage } from "./pages/HomePage";
 import { LocatairesPage } from "./pages/LocatairesPage";
 import { LoginPage } from "./pages/LoginPage";
 import { LoyersPage } from "./pages/LoyersPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 import { NouveauBienPage } from "./pages/NouveauBienPage";
 import { NouveauContratPage } from "./pages/NouveauContratPage";
 import { NouveauDossierPage } from "./pages/NouveauDossierPage";
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/contrats/:id" element={<ContratDetailPage />} />
         <Route path="/caution" element={<CautionPage />} />
         <Route path="/loyers" element={<LoyersPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/messages" element={<ConversationsPage />} />
         <Route path="/messages/:id" element={<ConversationDetailPage />} />
         <Route path="/visites" element={<VisitesPage />} />
