@@ -147,7 +147,9 @@ export function ContratDetailPage() {
       <Link className="text-sm text-primary" to="/contrats">Contrats</Link>
       <h1 className="mt-2 text-2xl font-semibold text-primary">Contrat {contrat.statut}</h1>
       <p className="text-sm">{contrat.loyer} {contrat.devise} / {contrat.periodicite} · {contrat.dateDebut}</p>
-      <p className="mt-2 text-xs text-slate-500">Regle de resiliation : preavis < 30 jours = 1 periode de loyer ({contrat.loyer} {contrat.devise}).</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Regle de resiliation : preavis inferieur a 30 jours = 1 periode de loyer ({contrat.loyer} {contrat.devise}).
+      </p>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       <div className="mt-4 flex flex-wrap gap-2">
         {contrat.statut === "BROUILLON" && <button className="rounded-md bg-primary px-3 py-2 text-sm text-white" onClick={activer}>Activer</button>}
@@ -162,7 +164,7 @@ export function ContratDetailPage() {
           </label>
           <p className="mt-2 text-slate-600">
             Penalite estimee : {penaliteEstimee} {contrat.devise}
-            {jours < 30 ? " (preavis inferieur a 30 jours)" : " (preavis respecté)"}
+            {jours < 30 ? " (preavis inferieur a 30 jours)" : " (preavis respecte)"}
           </p>
           <button className="mt-3 rounded-md border px-3 py-2" onClick={resilier}>Confirmer la resiliation</button>
         </section>
