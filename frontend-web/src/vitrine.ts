@@ -19,6 +19,7 @@ export type Annonce = {
 };
 
 export type Creneau = { debut: string; fin: string; statut: string };
+export type Media = { id?: string; url: string; type?: string };
 
 export type Avis = {
   id: string;
@@ -47,6 +48,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 export const vitrineApi = {
   list: (ville?: string) => req<Annonce[]>(`/api/v1/public/annonces${ville ? `?ville=${encodeURIComponent(ville)}` : ""}`),
   get: (id: string) => req<Annonce>(`/api/v1/public/annonces/${id}`),
+  medias: (id: string) => req<Media[]>(`/api/v1/public/annonces/${id}/medias`),
   dispo: (id: string) => req<Creneau[]>(`/api/v1/public/annonces/${id}/disponibilites`),
   reserver: (payload: unknown) => req(`/api/v1/public/reservations`, { method: "POST", body: JSON.stringify(payload) }),
   visiter: (payload: { uniteId: string; nom: string; telephone?: string; creneau: string }) =>
