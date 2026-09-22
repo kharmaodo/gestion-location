@@ -1,11 +1,13 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getAccessToken } from "../api";
-import { Annonce, Avis, Creneau, vitrineApi } from "../vitrine";
+import { Annonce, Avis, Creneau, Media, vitrineApi } from "../vitrine";
 
 export function AnnonceDetailPage() {
   const { id } = useParams();
   const [annonce, setAnnonce] = useState<Annonce | null>(null);
+  const [medias, setMedias] = useState<Media[]>([]);
+  const [photo, setPhoto] = useState<string | null>(null);
   const [creneaux, setCreneaux] = useState<Creneau[]>([]);
   const [avis, setAvis] = useState<Avis[]>([]);
   const [nom, setNom] = useState("");
@@ -27,6 +29,10 @@ export function AnnonceDetailPage() {
   useEffect(() => {
     if (!id) return;
     vitrineApi.get(id).then(setAnnonce).catch((e) => setError(e.message));
+    vitrineApi.medias(id).then((list) => {
+      setMedias(list);
+      setPhoto(list[0]?.url ?? null);
+    }).catch(() => undefined);
     vitrineApi.dispo(id).then(setCreneaux).catch(() => undefined);
     loadAvis();
   }, [id]);
@@ -76,6 +82,18 @@ export function AnnonceDetailPage() {
       <Link className="text-sm text-primary" to="/annonces">Annonces</Link>
       <h1 className="mt-2 text-2xl font-semibold text-primary">{annonce.libelle}</h1>
       <p className="text-sm text-slate-600">{annonce.designationBien} · {annonce.ville} · {annonce.loyer} {annonce.devise} / {annonce.periodicite}</p>
+      {photo && (
+        <img src={photo} alt="" className="mt-4 max-h-80 w-full rounded-lg object-cover" />
+      )}
+      {medias.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {medias.map((m) => (
+            <button key={m.url} type="button" onClick={() => setPhoto(m.url)}>
+              <img src={m.url} alt="" className={`h-16 w-16 rounded object-cover ${photo === m.url ? "ring-2 ring-primary" : ""}`} />
+            </button>
+          ))}
+        </div>
+      )}
       <h2 className="mt-6 font-medium">Periodes reservees</h2>
       <ul className="mt-2 text-sm">
         {creneaux.map((c, i) => <li key={i}>{c.debut} → {c.fin} ({c.statut})</li>)}
