@@ -26,6 +26,12 @@ export type Contrat = {
   avenants?: Avenant[];
 };
 
+export type Resiliation = {
+  contrat: Contrat;
+  penalite: number;
+  motifPenalite?: string;
+};
+
 export type Certificat = {
   contratId: string;
   statut: string;
@@ -96,7 +102,11 @@ export const contratsApi = {
   get: (id: string) => req<Contrat>(`/api/v1/contrats/${id}`),
   create: (payload: unknown) => req<Contrat>("/api/v1/contrats", { method: "POST", body: JSON.stringify(payload) }),
   activer: (id: string) => req<Contrat>(`/api/v1/contrats/${id}/activation`, { method: "POST" }),
-  resilier: (id: string) => req<Contrat>(`/api/v1/contrats/${id}/resiliation`, { method: "POST" }),
+  resilier: (id: string, preavisJours: number) =>
+    req<Resiliation>(`/api/v1/contrats/${id}/resiliation`, {
+      method: "POST",
+      body: JSON.stringify({ preavisJours }),
+    }),
   avenant: (id: string, payload: unknown) =>
     req<Contrat>(`/api/v1/contrats/${id}/avenants`, { method: "POST", body: JSON.stringify(payload) }),
   certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),

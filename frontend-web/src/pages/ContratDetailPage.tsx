@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, getAccessToken, MeResponse } from "../api";
-import { Certificat, Contacts, Contrat, EtatLieux, Restitution, Signature, contratsApi } from "../contrats";
+import { Certificat, Contacts, Contrat, EtatLieux, Resiliation, Restitution, Signature, contratsApi } from "../contrats";
 import { locatairesApi } from "../locataires";
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -14,6 +14,8 @@ export function ContratDetailPage() {
   const [cert, setCert] = useState<Certificat | null>(null);
   const [contacts, setContacts] = useState<Contacts | null>(null);
   const [resti, setResti] = useState<Restitution | null>(null);
+  const [resil, setResil] = useState<Resiliation | null>(null);
+  const [preavis, setPreavis] = useState("30");
   const [sigs, setSigs] = useState<Signature[]>([]);
   const [edls, setEdls] = useState<EtatLieux[]>([]);
   const [edlType, setEdlType] = useState("ENTREE");
@@ -29,6 +31,8 @@ export function ContratDetailPage() {
 
   const nomProprio = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "";
   const nomLoc = contacts?.locataire?.nom || nomLocataire;
+  const jours = Number(preavis) || 0;
+  const penaliteEstimee = contrat && jours < 30 ? contrat.loyer : 0;
 
   async function nomDepuisReservation(reservationId?: string, uniteId?: string) {
     const token = getAccessToken();
@@ -72,7 +76,11 @@ export function ContratDetailPage() {
   }
   async function resilier() {
     if (!id) return;
-    try { await contratsApi.resilier(id); reload(); } catch (e) { setError(e instanceof Error ? e.message : "Erreur"); }
+    try {
+      const r = await contratsApi.resilier(id, jours);
+      setResil(r);
+      reload();
+    } catch (e) { setError(e instanceof Error ? e.message : "Erreur"); }
   }
   async function avenant(e: FormEvent) {
     e.preventDefault();
@@ -139,13 +147,35 @@ export function ContratDetailPage() {
       <Link className="text-sm text-primary" to="/contrats">Contrats</Link>
       <h1 className="mt-2 text-2xl font-semibold text-primary">Contrat {contrat.statut}</h1>
       <p className="text-sm">{contrat.loyer} {contrat.devise} / {contrat.periodicite} · {contrat.dateDebut}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Regle de resiliation : preavis inferieur a 30 jours = 1 periode de loyer ({contrat.loyer} {contrat.devise}).
+      </p>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       <div className="mt-4 flex flex-wrap gap-2">
         {contrat.statut === "BROUILLON" && <button className="rounded-md bg-primary px-3 py-2 text-sm text-white" onClick={activer}>Activer</button>}
-        {contrat.statut === "ACTIF" && <button className="rounded-md border px-3 py-2 text-sm" onClick={resilier}>Resilier</button>}
         <button className="rounded-md border px-3 py-2 text-sm" onClick={attestation}>Attestation</button>
         <button className="rounded-md border px-3 py-2 text-sm" onClick={restitution}>Restitution caution</button>
       </div>
+      {contrat.statut === "ACTIF" && (
+        <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
+          <h2 className="mb-2 font-medium">Resiliation</h2>
+          <label className="block">Preavis (jours)
+            <input className="ml-2 w-24 rounded-md border px-2 py-1" type="number" min={0} value={preavis} onChange={(e) => setPreavis(e.target.value)} />
+          </label>
+          <p className="mt-2 text-slate-600">
+            Penalite estimee : {penaliteEstimee} {contrat.devise}
+            {jours < 30 ? " (preavis inferieur a 30 jours)" : " (preavis respecte)"}
+          </p>
+          <button className="mt-3 rounded-md border px-3 py-2" onClick={resilier}>Confirmer la resiliation</button>
+        </section>
+      )}
+      {resil && (
+        <section className="mt-4 rounded-lg bg-amber-50 p-4 text-sm">
+          <p className="font-medium">Contrat resilie</p>
+          <p>Penalite : {resil.penalite} {contrat.devise}</p>
+          <p>{resil.motifPenalite}</p>
+        </section>
+      )}
       <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
         <h2 className="mb-2 font-medium">Signatures</h2>
         <ul className="space-y-2">
@@ -175,13 +205,10 @@ export function ContratDetailPage() {
             <li key={e.id} className="flex items-center justify-between gap-2">
               <span>{e.type} · {e.statut} · {e.coutReparations ?? 0}</span>
               {e.statut !== "VALIDE" && (
-                <button className="rounded-md border px-2 py-1 text-xs" onClick={() => contratsApi.validerEdl(e.id).then(reload).catch((err) => setError(err.message))}>
-                  Valider
-                </button>
+                <button className="rounded-md border px-2 py-1 text-xs" onClick={() => contratsApi.validerEdl(e.id).then(reload).catch((err) => setError(err.message))}>Valider</button>
               )}
             </li>
           ))}
-          {edls.length === 0 && <li className="text-slate-500">Aucun EDL.</li>}
         </ul>
         <form className="mt-3 space-y-2" onSubmit={creerEdl}>
           <select className="w-full rounded-md border px-2 py-1" value={edlType} onChange={(e) => setEdlType(e.target.value)}>
@@ -201,41 +228,29 @@ export function ContratDetailPage() {
               <div>
                 <p className="text-xs text-slate-500">Proprietaire</p>
                 <p>{contacts.proprietaire?.nom ?? "—"}</p>
-                <p>{contacts.proprietaire?.email ?? "—"}</p>
-                <p>{contacts.proprietaire?.telephone ?? "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Locataire</p>
                 <p>{contacts.locataire?.nom ?? "—"}</p>
-                <p>{contacts.locataire?.email ?? "—"}</p>
-                <p>{contacts.locataire?.telephone ?? "—"}</p>
               </div>
             </div>
           ) : (
-            <p className="text-slate-500">{contacts.motif ?? "Contacts masques tant que le contrat n'est pas signe des deux cotes."}</p>
+            <p className="text-slate-500">{contacts.motif ?? "Contacts masques."}</p>
           )}
         </section>
       )}
       {resti && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
           <h2 className="mb-2 font-medium">Restitution de caution</h2>
-          <p>Caution initiale : {resti.cautionInitiale} {resti.devise}</p>
-          <p>Reparations EDL sortie : {resti.coutReparations} {resti.devise}</p>
-          <p>Retenu : {resti.montantRetenu} {resti.devise}</p>
-          <p className="font-medium">A restituer : {resti.montantRestitue} {resti.devise}</p>
+          <p>A restituer : {resti.montantRestitue} {resti.devise}</p>
         </section>
       )}
       {cert && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
-          <h2 className="mb-2 font-medium">Attestation de location</h2>
-          <p>{String(cert.attestation ?? JSON.stringify(cert, null, 2))}</p>
+          <h2 className="mb-2 font-medium">Attestation</h2>
+          <p>{String(cert.attestation ?? JSON.stringify(cert))}</p>
         </section>
       )}
-      <ul className="mt-6 space-y-2 text-sm">
-        {(contrat.avenants ?? []).map((a) => (
-          <li key={a.id} className="rounded-lg bg-white p-3 shadow">{a.dateEffet} — {a.motif}</li>
-        ))}
-      </ul>
       {contrat.statut === "ACTIF" && (
         <form className="mt-6 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={avenant}>
           <h2 className="font-medium">Avenant</h2>
@@ -245,7 +260,7 @@ export function ContratDetailPage() {
             <option value="HEBDOMADAIRE">Hebdomadaire</option>
             <option value="MENSUEL">Mensuel</option>
           </select>
-          <input className="w-full rounded-md border px-3 py-2" placeholder="Nouveau loyer (optionnel)" value={loyer} onChange={(e) => setLoyer(e.target.value)} />
+          <input className="w-full rounded-md border px-3 py-2" placeholder="Nouveau loyer" value={loyer} onChange={(e) => setLoyer(e.target.value)} />
           <input type="date" className="w-full rounded-md border px-3 py-2" value={dateEffet} onChange={(e) => setDateEffet(e.target.value)} required />
           <button className="rounded-md bg-primary px-4 py-2 text-sm text-white">Enregistrer avenant</button>
         </form>
