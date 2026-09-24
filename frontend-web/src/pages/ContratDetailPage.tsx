@@ -96,6 +96,10 @@ export function ContratDetailPage() {
     if (!id) return;
     try { setCert(await contratsApi.certificat(id)); } catch (e) { setError(e instanceof Error ? e.message : "Attestation indisponible"); }
   }
+  async function attestationPdf() {
+    if (!id) return;
+    try { await contratsApi.certificatPdf(id); } catch (e) { setError(e instanceof Error ? e.message : "PDF indisponible"); }
+  }
   async function restitution() {
     if (!id) return;
     try { setResti(await contratsApi.restitution(id)); } catch (e) { setError(e instanceof Error ? e.message : "Restitution indisponible"); }
@@ -154,6 +158,7 @@ export function ContratDetailPage() {
       <div className="mt-4 flex flex-wrap gap-2">
         {contrat.statut === "BROUILLON" && <button className="rounded-md bg-primary px-3 py-2 text-sm text-white" onClick={activer}>Activer</button>}
         <button className="rounded-md border px-3 py-2 text-sm" onClick={attestation}>Attestation</button>
+        <button className="rounded-md border px-3 py-2 text-sm" onClick={attestationPdf}>PDF</button>
         <button className="rounded-md border px-3 py-2 text-sm" onClick={restitution}>Restitution caution</button>
       </div>
       {contrat.statut === "ACTIF" && (
@@ -248,7 +253,7 @@ export function ContratDetailPage() {
       {cert && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
           <h2 className="mb-2 font-medium">Attestation</h2>
-          <p>{String(cert.attestation ?? JSON.stringify(cert))}</p>
+          <p>{String(cert.texte ?? cert.attestation ?? JSON.stringify(cert))}</p>
         </section>
       )}
       {contrat.statut === "ACTIF" && (
