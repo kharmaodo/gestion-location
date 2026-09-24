@@ -11,6 +11,7 @@ import com.location.locataires.entity.DossierEntity;
 import com.location.locataires.repository.DossierRepository;
 import com.location.shared.exception.ApiException;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -52,5 +53,21 @@ public class CertificatService {
         return new CertificatResponse(
                 c.getId(), "OCCUPATION", c.getStatut(), locataire, bien, unite,
                 c.getDateDebut(), c.getDateFin(), texte, Instant.now());
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] pdf(UUID proprietaireId, UUID contratId) {
+        CertificatResponse c = emettre(proprietaireId, contratId);
+        return SimplePdf.fromLines(List.of(
+                "ATTESTATION DE LOCATION",
+                "",
+                "Contrat : " + c.contratId(),
+                "Locataire : " + c.locataire(),
+                "Bien : " + c.bien(),
+                "Unite : " + c.unite(),
+                "Du " + c.dateDebut() + " au " + (c.dateFin() == null ? "-—" : c.dateFin()),
+                "Emis le : " + c.emisLe(),
+                "",
+                c.texte()));
     }
 }

@@ -3,6 +3,9 @@ package com.location.contrats.controller;
 import com.location.contrats.dto.CertificatResponse;
 import com.location.contrats.service.CertificatService;
 import java.util.UUID;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,5 +24,15 @@ public class CertificatController {
     @PreAuthorize("hasRole('PROPRIETAIRE')")
     public CertificatResponse get(Authentication auth, @PathVariable UUID id) {
         return service.emettre(UUID.fromString(auth.getName()), id);
+    }
+
+    @GetMapping("/api/v1/contrats/{id}/certificat.pdf")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    public ResponseEntity<byte[]> pdf(Authentication auth, @PathVariable UUID id) {
+        byte[] body = service.pdf(UUID.fromString(auth.getName()), id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=attestation-" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(body);
     }
 }
