@@ -41,6 +41,7 @@ export type Certificat = {
   devise: string;
   periodicite: string;
   attestation?: string;
+  texte?: string;
   [key: string]: unknown;
 };
 
@@ -110,6 +111,20 @@ export const contratsApi = {
   avenant: (id: string, payload: unknown) =>
     req<Contrat>(`/api/v1/contrats/${id}/avenants`, { method: "POST", body: JSON.stringify(payload) }),
   certificat: (id: string) => req<Certificat>(`/api/v1/contrats/${id}/certificat`),
+  certificatPdf: async (id: string) => {
+    const token = getAccessToken();
+    const res = await fetch(`${API}/api/v1/contrats/${id}/certificat.pdf`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("PDF indisponible (contrat ACTIF requis)");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `attestation-${id}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
   contacts: (id: string) => req<Contacts>(`/api/v1/contrats/${id}/contacts`),
   restitution: (id: string) => req<Restitution>(`/api/v1/contrats/${id}/restitution-caution`),
   signatures: (contratId: string) => req<Signature[]>(`/api/v1/signatures?contratId=${contratId}`),
