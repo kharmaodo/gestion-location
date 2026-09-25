@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Dossier, locatairesApi } from "../locataires";
 
+function csvCell(v?: string) {
+  const s = v ?? "";
+  if (/[",\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
+  return s;
+}
+
 export function LocatairesPage() {
   const [params] = useSearchParams();
   const location = useLocation();
@@ -21,13 +27,33 @@ export function LocatairesPage() {
       ),
     [items, q]
   );
+
+  function exporter() {
+    const header = "prenom,nom,telephone,email,kyc\n";
+    const rows = filtered.map((d) =>
+      [d.prenom, d.nom, d.telephone, d.email, d.kycStatut].map(csvCell).join(",")
+    ).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "locataires.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold text-primary">Locataires</h1>
-        <Link className="rounded-md bg-primary px-4 py-2 text-sm text-white" to="/locataires/nouveau">+ Dossier</Link>
+        <div className="flex gap-2">
+          <button className="rounded-md border px-4 py-2 text-sm" type="button" onClick={exporter} disabled={filtered.length === 0}>
+            Export CSV
+          </button>
+          <Link className="rounded-md bg-primary px-4 py-2 text-sm text-white" to="/locataires/nouveau">+ Dossier</Link>
+        </div>
       </div>
-      {flash && <p className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm">KYC mis à jour : {flash}</p>}
+      {flash && <p className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm">KYC mis a jour : {flash}</p>}
       {q && <p className="mb-3 text-sm text-slate-500">Filtre : {q}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="space-y-3">
