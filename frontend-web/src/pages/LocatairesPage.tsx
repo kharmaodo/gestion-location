@@ -13,6 +13,7 @@ export function LocatairesPage() {
   const location = useLocation();
   const flash = (location.state as { kycStatut?: string } | null)?.kycStatut;
   const q = (params.get("q") ?? "").toLowerCase();
+  const [kyc, setKyc] = useState("TOUS");
   const [items, setItems] = useState<Dossier[]>([]);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -20,12 +21,12 @@ export function LocatairesPage() {
   }, []);
   const filtered = useMemo(
     () =>
-      items.filter(
-        (d) =>
-          !q ||
-          `${d.prenom ?? ""} ${d.nom} ${d.telephone ?? ""} ${d.email ?? ""}`.toLowerCase().includes(q)
-      ),
-    [items, q]
+      items.filter((d) => {
+        if (kyc !== "TOUS" && d.kycStatut !== kyc) return false;
+        if (!q) return true;
+        return `${d.prenom ?? ""} ${d.nom} ${d.telephone ?? ""} ${d.email ?? ""}`.toLowerCase().includes(q);
+      }),
+    [items, q, kyc]
   );
 
   function exporter() {
@@ -53,8 +54,25 @@ export function LocatairesPage() {
           <Link className="rounded-md bg-primary px-4 py-2 text-sm text-white" to="/locataires/nouveau">+ Dossier</Link>
         </div>
       </div>
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
+        {[
+          ["TOUS", "Tous"],
+          ["EN_ATTENTE", "En attente"],
+          ["VALIDE", "Valides"],
+          ["REJETE", "Rejetes"],
+        ].map(([v, l]) => (
+          <button
+            key={v}
+            type="button"
+            className={`rounded-md border px-3 py-1 ${kyc === v ? "bg-primary text-white" : "bg-white"}`}
+            onClick={() => setKyc(v)}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
       {flash && <p className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm">KYC mis a jour : {flash}</p>}
-      {q && <p className="mb-3 text-sm text-slate-500">Filtre : {q}</p>}
+      {q && <p className="mb-3 text-sm text-slate-500">Recherche : {q}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="space-y-3">
         {filtered.map((d) => (
