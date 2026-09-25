@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { Contrat, contratsApi } from "../contrats";
 import { Litige, litigesApi } from "../litiges";
@@ -9,6 +9,7 @@ export function LitigesPage() {
   const [contratId, setContratId] = useState("");
   const [motif, setMotif] = useState("DEGATS");
   const [description, setDescription] = useState("");
+  const [filtre, setFiltre] = useState("TOUS");
   const [roles, setRoles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const proprio = roles.includes("PROPRIETAIRE");
@@ -36,12 +37,34 @@ export function LitigesPage() {
     }
   }
 
+  const filtered = useMemo(
+    () => items.filter((l) => filtre === "TOUS" || l.statut === filtre),
+    [items, filtre]
+  );
+
   return (
     <main className="mx-auto max-w-3xl p-8">
-      <h1 className="mb-6 text-2xl font-semibold text-primary">Litiges</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-primary">Litiges</h1>
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
+        {[
+          ["TOUS", "Tous"],
+          ["OUVERT", "Ouverts"],
+          ["RESOLU", "Resolus"],
+          ["REJETE", "Rejetes"],
+        ].map(([v, l]) => (
+          <button
+            key={v}
+            type="button"
+            className={`rounded-md border px-3 py-1 ${filtre === v ? "bg-primary text-white" : "bg-white"}`}
+            onClick={() => setFiltre(v)}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
       <div className="space-y-2">
-        {items.map((l) => (
+        {filtered.map((l) => (
           <div key={l.id} className="rounded-lg bg-white p-4 text-sm shadow">
             <p className="font-medium">{l.motif} · {l.statut}</p>
             <p className="text-slate-600">{l.description}</p>
@@ -54,7 +77,7 @@ export function LitigesPage() {
             )}
           </div>
         ))}
-        {items.length === 0 && <p className="text-sm text-slate-500">Aucun litige.</p>}
+        {filtered.length === 0 && <p className="text-sm text-slate-500">Aucun litige.</p>}
       </div>
       <form className="mt-6 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={ouvrir}>
         <h2 className="font-medium">Ouvrir un litige</h2>
