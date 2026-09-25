@@ -14,6 +14,7 @@ type Echeance = {
   paiements?: Paiement[];
 };
 type Relance = { id?: string; echeanceId?: string; canal?: string; statut?: string; message?: string };
+type Intention = { id: string; fournisseur: string; statut: string; checkoutUrl?: string };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
@@ -75,6 +76,23 @@ export function LoyersPage() {
     }
   }
 
+  async function payerEnLigne(id: string) {
+    const fournisseur = ["WAVE", "ORANGE_MONEY", "CARTE"].includes(mode) ? mode : "WAVE";
+    try {
+      const intention = await call<Intention>(`/api/v1/loyers/${id}/paiement-en-ligne`, {
+        method: "POST",
+        body: JSON.stringify({ fournisseur }),
+      });
+      await call("/api/v1/public/paiements/webhook", {
+        method: "POST",
+        body: JSON.stringify({ intentionId: intention.id, statut: "REUSSI" }),
+      });
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur paiement en ligne");
+    }
+  }
+
   return (
     <main className="mx-auto max-w-4xl p-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
@@ -91,18 +109,22 @@ export function LoyersPage() {
           <option value="VIREMENT">Virement</option>
           <option value="WAVE">Wave</option>
           <option value="ORANGE_MONEY">Orange Money</option>
+          <option value="CARTE">Carte</option>
         </select>
       </label>
       <div className="space-y-3">
         {items.map((e) => (
           <div key={e.id} className="rounded-lg bg-white p-4 shadow">
-            <div className="flex justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{e.periodeDebut} → {e.periodeFin}</p>
                 <p className="text-sm text-slate-600">{e.montant} {e.devise} · {e.statut}</p>
               </div>
               {e.statut !== "PAYEE" && (
-                <button className="rounded-md border px-3 py-1 text-sm" onClick={() => payer(e.id, e.montant)}>Encaisser</button>
+                <div className="flex gap-2">
+                  <button className="rounded-md border px-3 py-1 text-sm" onClick={() => payer(e.id, e.montant)}>Encaisser</button>
+                  <button className="rounded-md bg-primary px-3 py-1 text-sm text-white" onClick={() => payerEnLigne(e.id)}>Payer en ligne</button>
+                </div>
               )}
             </div>
             <ul className="mt-2 text-sm text-slate-600">
