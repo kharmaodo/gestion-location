@@ -10,7 +10,9 @@ import com.location.paiements.entity.RelanceEntity;
 import com.location.paiements.repository.EcheanceRepository;
 import com.location.paiements.repository.RelanceRepository;
 import com.location.shared.mail.RelanceMailer;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,33 +46,56 @@ public class RelanceService {
     @Transactional
     public List<RelanceResponse> declencher(UUID proprietaireId) {
         List<RelanceResponse> out = new ArrayList<>();
-        LocalDate today = LocalDate.now();
         for (EcheanceEntity e : echeances.findByProprietaireIdOrderByPeriodeDebutDesc(proprietaireId)) {
-            if ("PAYEE".equals(e.getStatut())) {
-                continue;
+            RelanceResponse r = relancerSiDue(e);
+            if (r != null) {
+                out.add(r);
             }
-            boolean due = !e.getPeriodeFin().isAfter(today) || "A_PAYER".equals(e.getStatut()) || "PARTIEL".equals(e.getStatut());
-            if (!due) {
-                continue;
-            }
-            RelanceEntity r = new RelanceEntity();
-            r.setId(UUID.randomUUID());
-            r.setEcheanceId(e.getId());
-            r.setCanal("EMAIL");
-            r.setMessage("Relance loyer " + e.getMontant() + " " + e.getDevise() + " periode " + e.getPeriodeDebut());
-            relances.save(r);
-            String dest = destinataire(e.getContratId());
-            mailer.envoyer(dest, "Relance loyer", r.getMessage());
-            log.info("Relance {} pour echeance {}", r.getId(), e.getId());
-            out.add(new RelanceResponse(r.getId(), r.getEcheanceId(), r.getCanal(), r.getMessage(), r.getEnvoyeeLe()));
         }
         return out;
+    }
+
+    @Transactional
+    public int declencherTous() {
+        int n = 0;
+        for (EcheanceEntity e : echeances.findAll()) {
+            if (relancerSiDue(e) != null) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private RelanceResponse relancerSiDue(EcheanceEntity e) {
+        LocalDate today = LocalDate.now();
+        if ("PAYEE".equals(e.getStatut())) {
+            return null;
+        }
+        boolean due = !e.getPeriodeFin().isAfter(today)
+                || "A_PAYER".equals(e.getStatut())
+                || "PARTIEL".equals(e.getStatut());
+        if (!due) {
+            return null;
+        }
+        Instant debutJour = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+        if (relances.existsByEcheanceIdAndEnvoyeeLeAfter(e.getId(), debutJour)) {
+            return null;
+        }
+        RelanceEntity r = new RelanceEntity();
+        r.setId(UUID.randomUUID());
+        r.setEcheanceId(e.getId());
+        r.setCanal("EMAIL");
+        r.setMessage("Relance loyer " + e.getMontant() + " " + e.getDevise() + " periode " + e.getPeriodeDebut());
+        relances.save(r);
+        mailer.envoyer(destinataire(e.getContratId()), "Relance loyer", r.getMessage());
+        log.info("Relance {} pour echeance {}", r.getId(), e.getId());
+        return new RelanceResponse(r.getId(), r.getEcheanceId(), r.getCanal(), r.getMessage(), r.getEnvoyeeLe());
     }
 
     @Transactional(readOnly = true)
     public List<RelanceResponse> lister(UUID proprietaireId) {
         return echeances.findByProprietaireIdOrderByPeriodeDebutDesc(proprietaireId).stream()
-                .flatMap(e -> relances.findByEcheanceIdOrderByEnvoyeeLeDesc(e.getId()).stream())
+                .flatMap(x -> relances.findByEcheanceIdOrderByEnvoyeeLeDesc(x.getId()).stream())
                 .map(r -> new RelanceResponse(r.getId(), r.getEcheanceId(), r.getCanal(), r.getMessage(), r.getEnvoyeeLe()))
                 .toList();
     }
