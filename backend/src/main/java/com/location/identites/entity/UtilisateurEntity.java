@@ -1,6 +1,8 @@
 package com.location.identites.entity;
 
+import com.location.shared.crypto.EncryptedStringConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -15,13 +17,19 @@ public class UtilisateurEntity {
     @Column(unique = true) private String email;
     @Column(unique = true) private String telephone;
     @Column(name = "mot_de_passe_hash", nullable = false) private String motDePasseHash;
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(columnDefinition = "text")
     private String prenom;
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(columnDefinition = "text")
     private String nom;
     @Column(nullable = false) private String statut = "ACTIF";
     @Column(name = "email_verifie", nullable = false) private boolean emailVerifie;
     @Column(name = "telephone_verifie", nullable = false) private boolean telephoneVerifie;
     @Column(name = "two_factor_active", nullable = false) private boolean twoFactorActive;
-    @Column(name = "two_factor_secret") private String twoFactorSecret;
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "two_factor_secret", columnDefinition = "text")
+    private String twoFactorSecret;
     @Column(name = "cree_le", nullable = false) private Instant creeLe = Instant.now();
     @Column(name = "maj_le", nullable = false) private Instant majLe = Instant.now();
     @Version private Long version;
