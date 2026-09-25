@@ -6,6 +6,7 @@ import { Contrat, contratsApi } from "../contrats";
 export function ContratsPage() {
   const [params] = useSearchParams();
   const q = (params.get("q") ?? "").toLowerCase();
+  const [statut, setStatut] = useState("TOUS");
   const [items, setItems] = useState<Contrat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [proprio, setProprio] = useState(false);
@@ -15,14 +16,14 @@ export function ContratsPage() {
   }, []);
   const filtered = useMemo(
     () =>
-      items.filter(
-        (c) =>
-          !q ||
-          `${c.statut} ${c.periodicite} ${c.loyer} ${c.dateDebut} ${c.dateFin ?? ""}`
-            .toLowerCase()
-            .includes(q)
-      ),
-    [items, q]
+      items.filter((c) => {
+        if (statut !== "TOUS" && c.statut !== statut) return false;
+        if (!q) return true;
+        return `${c.statut} ${c.periodicite} ${c.loyer} ${c.dateDebut} ${c.dateFin ?? ""}`
+          .toLowerCase()
+          .includes(q);
+      }),
+    [items, q, statut]
   );
   return (
     <main className="mx-auto max-w-4xl p-8">
@@ -32,7 +33,24 @@ export function ContratsPage() {
           <Link className="rounded-md bg-primary px-4 py-2 text-sm text-white" to="/contrats/nouveau">+ Contrat</Link>
         )}
       </div>
-      {q && <p className="mb-3 text-sm text-slate-500">Filtre : {q}</p>}
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
+        {[
+          ["TOUS", "Tous"],
+          ["BROUILLON", "Brouillons"],
+          ["ACTIF", "Actifs"],
+          ["RESILIE", "Resilies"],
+        ].map(([v, l]) => (
+          <button
+            key={v}
+            type="button"
+            className={`rounded-md border px-3 py-1 ${statut === v ? "bg-primary text-white" : "bg-white"}`}
+            onClick={() => setStatut(v)}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+      {q && <p className="mb-3 text-sm text-slate-500">Recherche : {q}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="space-y-3">
         {filtered.map((c) => (
