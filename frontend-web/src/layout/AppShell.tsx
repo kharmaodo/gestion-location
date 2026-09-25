@@ -5,29 +5,29 @@ import { useI18n } from "../i18n";
 import { notificationsApi } from "../notifications";
 
 const PRO_LINKS = [
-  { to: "/", key: "Tableau de bord", end: true },
+  { to: "/", key: "nav.home", end: true },
   { to: "/biens", key: "nav.biens" },
   { to: "/locataires", key: "nav.locataires" },
   { to: "/contrats", key: "nav.contrats" },
-  { to: "/caution", key: "Caution" },
+  { to: "/caution", key: "nav.caution" },
   { to: "/loyers", key: "nav.loyers" },
-  { to: "/litiges", key: "Litiges" },
+  { to: "/litiges", key: "nav.litiges" },
   { to: "/visites", key: "nav.visites" },
-  { to: "/reservations", key: "Reservations" },
+  { to: "/reservations", key: "nav.reservations" },
   { to: "/messages", key: "nav.messages" },
-  { to: "/notifications", key: "Notifications" },
-  { to: "/annonces", key: "Annonces" },
+  { to: "/notifications", key: "nav.notifications" },
+  { to: "/annonces", key: "nav.annonces" },
 ];
 
 const LOC_LINKS = [
-  { to: "/", key: "Tableau de bord", end: true },
-  { to: "/annonces", key: "Annonces" },
+  { to: "/", key: "nav.home", end: true },
+  { to: "/annonces", key: "nav.annonces" },
   { to: "/contrats", key: "nav.contrats" },
-  { to: "/caution", key: "Caution" },
-  { to: "/litiges", key: "Litiges" },
+  { to: "/caution", key: "nav.caution" },
+  { to: "/litiges", key: "nav.litiges" },
   { to: "/messages", key: "nav.messages" },
-  { to: "/notifications", key: "Notifications" },
-  { to: "/securite", key: "Securite" },
+  { to: "/notifications", key: "nav.notifications" },
+  { to: "/securite", key: "nav.securite" },
 ];
 
 export function AppShell() {
@@ -83,7 +83,7 @@ export function AppShell() {
     <nav className="space-y-1">
       {links.map((l) => (
         <NavLink key={l.to} to={l.to} end={"end" in l ? l.end : false} className={itemClass} onClick={() => setOpen(false)}>
-          {l.key.startsWith("nav.") || l.key === "app.name" ? t(l.key) : l.key}
+          {t(l.key)}
         </NavLink>
       ))}
     </nav>
@@ -93,19 +93,19 @@ export function AppShell() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b bg-white px-4 py-3">
         <button className="rounded-md border px-2 py-1 text-sm lg:hidden" onClick={() => setOpen((o) => !o)}>
-          Menu
+          {t("nav.menu")}
         </button>
         <Link to="/" className="font-semibold text-primary">{t("app.name")}</Link>
         <form className="mx-auto hidden max-w-xl flex-1 md:block" onSubmit={onSearch}>
           <input
             className="w-full rounded-md border px-3 py-1.5 text-sm"
-            placeholder="Rechercher…"
+            placeholder={t("nav.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </form>
         <Link to="/notifications" className="rounded-md border px-2 py-1 text-sm">
-          Notifs{nonLues > 0 ? ` (${nonLues})` : ""}
+          {t("nav.notifications")}{nonLues > 0 ? ` (${nonLues})` : ""}
         </Link>
         <select className="rounded-md border px-2 py-1 text-sm" value={locale} onChange={(e) => setLocale(e.target.value)}>
           <option value="fr">FR</option>
@@ -113,22 +113,22 @@ export function AppShell() {
           <option value="wo">WO</option>
         </select>
         <span className="hidden text-sm font-medium sm:inline">{nom}</span>
-        <button className="rounded-md border px-3 py-1 text-sm" onClick={logout}>Sortir</button>
+        <button className="rounded-md border px-3 py-1 text-sm" onClick={logout}>{t("nav.logout")}</button>
       </header>
       <div className="flex flex-1">
         {open && (
-          <button className="fixed inset-0 z-10 bg-black/30 lg:hidden" onClick={() => setOpen(false)} aria-label="Fermer" />
+          <button className="fixed inset-0 z-10 bg-black/30 lg:hidden" onClick={() => setOpen(false)} aria-label={t("nav.menu")} />
         )}
         <aside className={`z-20 w-56 shrink-0 border-r bg-white p-3 ${open ? "fixed inset-y-0 left-0 pt-16 lg:static lg:pt-3" : "hidden lg:block"}`}>
           {menu}
-          <NavLink to="/securite" className={itemClass} onClick={() => setOpen(false)}>Securite</NavLink>
+          <NavLink to="/securite" className={itemClass} onClick={() => setOpen(false)}>{t("nav.securite")}</NavLink>
         </aside>
         <div className="min-w-0 flex-1">
           <Outlet />
         </div>
       </div>
       <footer className="border-t bg-white px-4 py-3 text-center text-xs text-slate-500">
-        {t("app.name")} · Donnees personnelles · Aide
+        {t("app.name")}
       </footer>
     </div>
   );
