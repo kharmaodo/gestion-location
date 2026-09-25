@@ -1,7 +1,9 @@
 package com.location.dashboard.controller;
 
 import com.location.dashboard.dto.DashboardResponse;
+import com.location.dashboard.dto.SerieMois;
 import com.location.dashboard.service.DashboardService;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,5 +24,10 @@ public class DashboardController {
     @GetMapping
     public DashboardResponse resume(Authentication auth) {
         return service.resume(UUID.fromString(auth.getName()));
+    }
+
+    @GetMapping("/series")
+    public List<SerieMois> series(Authentication auth) {
+        return service.series(UUID.fromString(auth.getName()));
     }
 }
