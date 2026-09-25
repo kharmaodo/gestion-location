@@ -12,6 +12,7 @@ export function AnnonceDetailPage() {
   const [avis, setAvis] = useState<Avis[]>([]);
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
+  const [email, setEmail] = useState("");
   const [debut, setDebut] = useState("");
   const [fin, setFin] = useState("");
   const [message, setMessage] = useState("");
@@ -20,7 +21,9 @@ export function AnnonceDetailPage() {
   const [commentaire, setCommentaire] = useState("");
   const [ok, setOk] = useState(false);
   const [okVisite, setOkVisite] = useState(false);
+  const [sendingVisite, setSendingVisite] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorVisite, setErrorVisite] = useState<string | null>(null);
 
   function loadAvis() {
     if (id) vitrineApi.avis(id).then(setAvis).catch(() => undefined);
@@ -41,7 +44,7 @@ export function AnnonceDetailPage() {
     e.preventDefault();
     if (!id) return;
     try {
-      await vitrineApi.reserver({ uniteId: id, nom, telephone, dateDebut: debut, dateFin: fin, message });
+      await vitrineApi.reserver({ uniteId: annonce?.uniteId ?? id, nom, telephone, dateDebut: debut, dateFin: fin, message });
       setOk(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reservation impossible");
@@ -50,17 +53,43 @@ export function AnnonceDetailPage() {
 
   async function visiter(e: FormEvent) {
     e.preventDefault();
-    if (!id || !creneau) return;
+    setErrorVisite(null);
+    const uniteId = annonce?.uniteId ?? id;
+    if (!uniteId) {
+      setErrorVisite("Annonce introuvable.");
+      return;
+    }
+    if (!nom.trim()) {
+      setErrorVisite("Indiquez un nom.");
+      return;
+    }
+    if (!creneau) {
+      setErrorVisite("Choisissez un creneau.");
+      return;
+    }
+    const when = new Date(creneau);
+    if (Number.isNaN(when.getTime())) {
+      setErrorVisite("Creneau invalide.");
+      return;
+    }
+    if (when.getTime() <= Date.now()) {
+      setErrorVisite("Le creneau doit etre dans le futur.");
+      return;
+    }
+    setSendingVisite(true);
     try {
       await vitrineApi.visiter({
-        uniteId: id,
-        nom,
-        telephone,
-        creneau: new Date(creneau).toISOString(),
+        uniteId,
+        nom: nom.trim(),
+        telephone: telephone.trim() || undefined,
+        email: email.trim() || undefined,
+        creneau: when.toISOString(),
       });
       setOkVisite(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Visite impossible");
+      setErrorVisite(err instanceof Error ? err.message : "Visite impossible");
+    } finally {
+      setSendingVisite(false);
     }
   }
 
@@ -115,19 +144,23 @@ export function AnnonceDetailPage() {
               {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} / 5</option>)}
             </select>
             <textarea className="w-full rounded-md border px-3 py-2 text-sm" placeholder="Commentaire" value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
-            <button className="rounded-md bg-primary px-3 py-1 text-sm text-white">Publier un avis</button>
+            <button type="submit" className="rounded-md bg-primary px-3 py-1 text-sm text-white">Publier un avis</button>
           </form>
         ) : (
           <p className="mt-2 text-xs text-slate-500">Connectez-vous pour laisser un avis.</p>
         )}
       </section>
-      {okVisite ? <p className="mt-6 text-emerald-700">Demande de visite envoyee.</p> : (
+      {okVisite ? <p className="mt-6 text-emerald-700">Demande de visite envoyee. Le proprietaire la verra dans Visites.</p> : (
         <form className="mt-6 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={visiter}>
           <h2 className="font-medium">Demander une visite</h2>
           <input className="w-full rounded-md border px-3 py-2" placeholder="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
           <input className="w-full rounded-md border px-3 py-2" placeholder="Telephone" value={telephone} onChange={(e) => setTelephone(e.target.value)} />
+          <input className="w-full rounded-md border px-3 py-2" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input type="datetime-local" className="w-full rounded-md border px-3 py-2" value={creneau} onChange={(e) => setCreneau(e.target.value)} required />
-          <button className="rounded-md border px-4 py-2 text-sm">Envoyer la demande</button>
+          {errorVisite && <p className="text-sm text-red-600">{errorVisite}</p>}
+          <button type="submit" disabled={sendingVisite} className="rounded-md bg-primary px-4 py-2 text-sm text-white disabled:opacity-50">
+            {sendingVisite ? "Envoi..." : "Envoyer la demande"}
+          </button>
         </form>
       )}
       {ok ? <p className="mt-6 text-emerald-700">Reservation envoyee.</p> : (
@@ -139,7 +172,7 @@ export function AnnonceDetailPage() {
           <input type="date" className="w-full rounded-md border px-3 py-2" value={fin} onChange={(e) => setFin(e.target.value)} required />
           <textarea className="w-full rounded-md border px-3 py-2" placeholder="Message" value={message} onChange={(e) => setMessage(e.target.value)} />
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button className="rounded-md bg-primary px-4 py-2 text-white">Envoyer</button>
+          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-white">Envoyer</button>
         </form>
       )}
     </main>

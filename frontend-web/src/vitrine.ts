@@ -51,7 +51,7 @@ export const vitrineApi = {
   medias: (id: string) => req<Media[]>(`/api/v1/public/annonces/${id}/medias`),
   dispo: (id: string) => req<Creneau[]>(`/api/v1/public/annonces/${id}/disponibilites`),
   reserver: (payload: unknown) => req(`/api/v1/public/reservations`, { method: "POST", body: JSON.stringify(payload) }),
-  visiter: (payload: { uniteId: string; nom: string; telephone?: string; creneau: string }) =>
+  visiter: (payload: { uniteId: string; nom: string; telephone?: string; email?: string; creneau: string }) =>
     req(`/api/v1/public/visites`, { method: "POST", body: JSON.stringify(payload) }),
   avis: (id: string) => req<Avis[]>(`/api/v1/public/annonces/${id}/avis`),
   publierAvis: (payload: { cibleUniteId: string; note: number; commentaire?: string }) =>
