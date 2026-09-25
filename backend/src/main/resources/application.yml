@@ -42,3 +42,6 @@ app:
   relances:
     enabled: ${RELANCE_CRON_ENABLED:true}
     cron: ${RELANCE_CRON:0 0 8 * * *}
+  supervision:
+    enabled: ${SUPERVISION_CRON_ENABLED:true}
+    cron: ${SUPERVISION_CRON:0 30 8 * * *}
