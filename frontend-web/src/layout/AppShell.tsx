@@ -32,6 +32,10 @@ const LOC_LINKS = [
   { to: "/securite", key: "nav.securite" },
 ];
 
+const FALLBACK: Record<string, Record<string, string>> = {
+  "nav.canaux": { fr: "Canaux", en: "Channels", wo: "Yoon" },
+};
+
 export function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,6 +57,12 @@ export function AppShell() {
   const proprio = me?.roles.includes("PROPRIETAIRE") ?? false;
   const links = proprio ? PRO_LINKS : LOC_LINKS;
   const nom = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "…";
+
+  function label(key: string) {
+    const value = t(key);
+    if (value !== key) return value;
+    return FALLBACK[key]?.[locale] ?? FALLBACK[key]?.fr ?? value;
+  }
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -115,7 +125,7 @@ export function AppShell() {
           <nav className="space-y-1">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} end={"end" in l ? l.end : false} className={itemClass} onClick={() => setOpen(false)}>
-                {t(l.key)}
+                {label(l.key)}
               </NavLink>
             ))}
           </nav>
