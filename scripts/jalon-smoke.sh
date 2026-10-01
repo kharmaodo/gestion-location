@@ -27,18 +27,18 @@ expect "$(code_of "$OUT")" 200 "login"
 TOKEN=$(body_of "$OUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
 
 echo "== US-04 export graphes"
-OUT=$(curl -sS -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$API/api/v1/dashboard/series.csv")
-expect "$(code_of "$OUT")" 200 "GET /dashboard/series.csv"
+OUT=$(curl -sS -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$API/api/v1/dashboard/series/export")
+expect "$(code_of "$OUT")" 200 "GET /dashboard/series/export"
 printf '%s\n' "$(body_of "$OUT")" | head -n 1 | grep -q "mois,du,encaisse" && echo "OK  entete CSV" || { echo "KO  entete CSV"; FAIL=$((FAIL + 1)); }
 
 echo "== US-17 chiffrement"
 OUT=$(curl -sS -w "\n%{http_code}" -X POST "$API/api/v1/crypto/roundtrip" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"plain":"CNI-123"}')
 expect "$(code_of "$OUT")" 200 "POST /crypto/roundtrip"
-body_of "$OUT" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('plain')=='CNI-123' and d.get('stored','').startswith('enc:'); print('OK  AES-GCM')" || { echo "KO  AES-GCM"; FAIL=$((FAIL + 1)); }
+body_of "$OUT" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('plain')=='CNI-123' and str(d.get('stored','')).startswith('enc:'); print('OK  AES-GCM')" || { echo "KO  AES-GCM"; FAIL=$((FAIL + 1)); }
 
 echo "== US-18 agregateur"
-OUT=$(curl -sS -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$API/api/v1/loyers/agregateur")
-expect "$(code_of "$OUT")" 200 "GET /loyers/agregateur"
+OUT=$(curl -sS -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$API/api/v1/psp")
+expect "$(code_of "$OUT")" 200 "GET /psp"
 body_of "$OUT" | grep -q MOCK && echo "OK  provider MOCK" || { echo "KO  provider"; FAIL=$((FAIL + 1)); }
 
 echo "== US-30 i18n"
