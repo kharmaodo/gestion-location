@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, getAccessToken } from "../api";
+import { Contrat, contratsApi } from "../contrats";
 
 type Dash = {
   biens: number;
@@ -36,6 +37,7 @@ export function HomePage() {
   const [alertes, setAlertes] = useState<Alerte[]>([]);
   const [series, setSeries] = useState<Serie[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
+  const [contrats, setContrats] = useState<Contrat[]>([]);
   useEffect(() => {
     api.me().then(async (m) => {
       setRoles(m.roles);
@@ -49,11 +51,14 @@ export function HomePage() {
         if (d.ok) setDash(await d.json());
         if (a.ok) setAlertes(await a.json());
         if (s.ok) setSeries(await s.json());
+      } else {
+        contratsApi.mes().then(setContrats).catch(() => undefined);
       }
     }).catch(() => undefined);
   }, []);
   const critiques = alertes.filter((x) => x.niveau === "CRITIQUE");
   const max = Math.max(1, ...series.map((x) => Math.max(Number(x.du), Number(x.encaisse))));
+  const actifs = contrats.filter((c) => c.statut === "ACTIF");
   return (
     <main className="mx-auto max-w-5xl p-8">
       <h1 className="mb-6 text-2xl font-semibold text-primary">Tableau de bord</h1>
@@ -64,10 +69,26 @@ export function HomePage() {
           <Card label="A recouvrer" value={`${dash.aRecouvrer} XOF`} hint={`${dash.echeancesAPayer + dash.echeancesPartielles} echeances`} />
           <Card label="Alertes" value={`${critiques.length}`} hint={`${alertes.length} signaux`} />
         </section>
+      ) : roles.includes("LOCATAIRE") ? (
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Card label="Contrats" value={`${contrats.length}`} hint={`${actifs.length} actifs`} />
+          <LinkCard to="/contrats" label="Mes contrats" hint="Bail, resiliation" />
+          <LinkCard to="/caution" label="Caution" hint="Montant et restitution" />
+          <LinkCard to="/messages" label="Messages" hint="Echanger avec le bailleur" />
+        </section>
       ) : (
-        <p className="text-sm text-slate-600">
-          {roles.includes("LOCATAIRE") ? "Bienvenue dans votre espace locataire." : "Chargement des indicateurs..."}
-        </p>
+        <p className="text-sm text-slate-600">Chargement des indicateurs...</p>
+      )}
+      {roles.includes("LOCATAIRE") && (
+        <section className="mt-8 space-y-2">
+          <h2 className="text-lg font-medium">Contrats</h2>
+          {contrats.map((c) => (
+            <Link key={c.id} to={`/contrats/${c.id}`} className="block rounded-lg bg-white p-3 text-sm shadow">
+              {c.statut} · {c.loyer} {c.devise} / {c.periodicite} · {c.dateDebut}
+            </Link>
+          ))}
+          {contrats.length === 0 && <p className="text-sm text-slate-500">Aucun contrat lie a ce compte.</p>}
+        </section>
       )}
       {series.length > 0 && (
         <section className="mt-8 rounded-lg bg-white p-4 shadow">
@@ -114,5 +135,15 @@ function Card({ label, value, hint }: { label: string; value: string; hint: stri
       <p className="text-xl font-semibold text-primary">{value}</p>
       <p className="text-xs text-slate-500">{hint}</p>
     </div>
+  );
+}
+
+function LinkCard({ to, label, hint }: { to: string; label: string; hint: string }) {
+  return (
+    <Link to={to} className="rounded-lg bg-white p-4 shadow hover:bg-slate-50">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="text-xl font-semibold text-primary">Ouvrir</p>
+      <p className="text-xs text-slate-500">{hint}</p>
+    </Link>
   );
 }
