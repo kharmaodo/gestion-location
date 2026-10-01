@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app: backend
+    env: {{ .Values.env }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        env: {{ .Values.env }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.image.backend }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SMS_MODE
+              value: {{ .Values.channels.sms | quote }}
+            - name: FCM_MODE
+              value: {{ .Values.channels.fcm | quote }}
+            - name: PSP_MODE
+              value: {{ .Values.channels.psp | quote }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.web }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 80

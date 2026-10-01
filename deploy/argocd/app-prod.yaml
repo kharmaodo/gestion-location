@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gestion-location-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kharmaodo/gestion-location.git
+    targetRevision: v1.0.0
+    path: deploy/helm/gestion-location
+    helm:
+      valueFiles:
+        - values-prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: location-prod
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

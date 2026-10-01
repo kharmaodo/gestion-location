@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gestion-location
+description: Location backend, web, postgres, minio
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

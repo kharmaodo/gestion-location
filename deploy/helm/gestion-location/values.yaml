@@ -1,0 +1,17 @@
+replicaCount: 1
+image:
+  backend: ghcr.io/kharmaodo/gestion-location-backend
+  web: ghcr.io/kharmaodo/gestion-location-web
+  tag: "1.0.0"
+env: dev
+channels:
+  sms: MOCK
+  fcm: MOCK
+  psp: MOCK
+ingress:
+  enabled: false
+  host: location.local
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
