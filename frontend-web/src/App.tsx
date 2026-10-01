@@ -5,6 +5,7 @@ import { AnnonceDetailPage } from "./pages/AnnonceDetailPage";
 import { AnnoncesPage } from "./pages/AnnoncesPage";
 import { BienDetailPage } from "./pages/BienDetailPage";
 import { BiensPage } from "./pages/BiensPage";
+import { CanauxPage } from "./pages/CanauxPage";
 import { CautionPage } from "./pages/CautionPage";
 import { ContratDetailPage } from "./pages/ContratDetailPage";
 import { ContratsPage } from "./pages/ContratsPage";
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/messages" element={<ConversationsPage />} />
         <Route path="/messages/:id" element={<ConversationDetailPage />} />
         <Route path="/visites" element={<VisitesPage />} />
+        <Route path="/canaux" element={<CanauxPage />} />
       </Route>
     </Routes>
   );
