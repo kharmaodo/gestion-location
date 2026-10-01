@@ -45,3 +45,7 @@ app:
   supervision:
     enabled: ${SUPERVISION_CRON_ENABLED:true}
     cron: ${SUPERVISION_CRON:0 30 8 * * *}
+  channels:
+    sms: ${SMS_MODE:MOCK}
+    fcm: ${FCM_MODE:MOCK}
+    psp: ${PSP_MODE:MOCK}
