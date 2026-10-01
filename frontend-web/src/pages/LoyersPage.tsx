@@ -27,7 +27,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.detail ?? "Erreur API");
+  if (!res.ok) throw new Error((body as { detail?: string }).detail ?? "Erreur API");
   return body as T;
 }
 
@@ -39,8 +39,8 @@ export function LoyersPage() {
 
   async function load() {
     try {
-      setItems(await call("/api/v1/loyers"));
-      setRelances(await call("/api/v1/loyers/relances").catch(() => []));
+      setItems(await call<Echeance[]>("/api/v1/loyers"));
+      setRelances(await call<Relance[]>("/api/v1/loyers/relances").catch(() => []));
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
@@ -50,7 +50,7 @@ export function LoyersPage() {
 
   async function generer() {
     try {
-      setItems(await call("/api/v1/loyers/generation", { method: "POST" }));
+      setItems(await call<Echeance[]>("/api/v1/loyers/generation", { method: "POST" }));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     }
@@ -58,7 +58,7 @@ export function LoyersPage() {
 
   async function relancer() {
     try {
-      setRelances(await call("/api/v1/loyers/relances", { method: "POST" }));
+      setRelances(await call<Relance[]>("/api/v1/loyers/relances", { method: "POST" }));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     }
