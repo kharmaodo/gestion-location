@@ -1,0 +1,9 @@
+env: test
+replicaCount: 1
+ingress:
+  enabled: true
+  host: location.test.local
+channels:
+  sms: MOCK
+  fcm: MOCK
+  psp: MOCK
