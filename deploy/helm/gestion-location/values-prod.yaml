@@ -1,0 +1,13 @@
+env: prod
+replicaCount: 2
+ingress:
+  enabled: true
+  host: location.example.com
+channels:
+  sms: LIVE
+  fcm: LIVE
+  psp: LIVE
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
