@@ -5,6 +5,9 @@ import com.location.dashboard.dto.SerieMois;
 import com.location.dashboard.service.DashboardService;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,5 +32,17 @@ public class DashboardController {
     @GetMapping("/series")
     public List<SerieMois> series(Authentication auth) {
         return service.series(UUID.fromString(auth.getName()));
+    }
+
+    @GetMapping(value = "/series.csv", produces = "text/csv")
+    public ResponseEntity<String> seriesCsv(Authentication auth) {
+        StringBuilder csv = new StringBuilder("mois,du,encaisse,aRecouvrer\n");
+        for (SerieMois s : service.series(UUID.fromString(auth.getName()))) {
+            csv.append(s.mois()).append(',').append(s.du()).append(',').append(s.encaisse()).append(',').append(s.aRecouvrer()).append('\n');
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=series.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csv.toString());
     }
 }
