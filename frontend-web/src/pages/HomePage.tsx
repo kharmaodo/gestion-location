@@ -32,6 +32,20 @@ type Serie = { mois: string; du: number; encaisse: number; aRecouvrer: number };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
+async function exporterSeries() {
+  const res = await fetch(`${API}/api/v1/dashboard/series/export`, {
+    headers: { Authorization: `Bearer ${getAccessToken()}` },
+  });
+  if (!res.ok) return;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "series.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function HomePage() {
   const [dash, setDash] = useState<Dash | null>(null);
   const [alertes, setAlertes] = useState<Alerte[]>([]);
@@ -59,9 +73,15 @@ export function HomePage() {
   const critiques = alertes.filter((x) => x.niveau === "CRITIQUE");
   const max = Math.max(1, ...series.map((x) => Math.max(Number(x.du), Number(x.encaisse))));
   const actifs = contrats.filter((c) => c.statut === "ACTIF");
+  const proprio = roles.includes("PROPRIETAIRE");
   return (
     <main className="mx-auto max-w-5xl p-8">
-      <h1 className="mb-6 text-2xl font-semibold text-primary">Tableau de bord</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-primary">Tableau de bord</h1>
+        {proprio && (
+          <button className="rounded-md border px-3 py-1 text-sm" type="button" onClick={exporterSeries}>Exporter CSV</button>
+        )}
+      </div>
       {dash ? (
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Card label="Occupation" value={`${dash.tauxOccupation} %`} hint={`${dash.unitesOccupees}/${dash.unites} unites`} />
