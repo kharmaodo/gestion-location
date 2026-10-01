@@ -10,7 +10,7 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_failed: ["rate<0.05"],
+    checks: ["rate>0.99"],
     http_req_duration: ["p(95)<800"],
   },
 };
@@ -23,7 +23,7 @@ export default function () {
   const login = http.post(
     `${API}/api/v1/auth/login`,
     JSON.stringify({ identifiant: "inconnu@test.sn", motDePasse: "x" }),
-    { headers: { "Content-Type": "application/json" } }
+    { headers: { "Content-Type": "application/json" }, responseCallback: http.expectedStatuses(401, 429) }
   );
   check(login, { "login refuse": (r) => r.status === 401 || r.status === 429 });
   sleep(0.2);
