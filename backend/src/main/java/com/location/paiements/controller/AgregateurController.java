@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/loyers/agregateur")
-@PreAuthorize("hasRole('PROPRIETAIRE')")
+@RequestMapping("/api/v1/psp")
+@PreAuthorize("isAuthenticated()")
 public class AgregateurController {
     private final String provider;
 
