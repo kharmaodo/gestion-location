@@ -15,6 +15,7 @@ type Echeance = {
 };
 type Relance = { id?: string; echeanceId?: string; canal?: string; statut?: string; message?: string };
 type Intention = { id: string; fournisseur: string; statut: string; checkoutUrl?: string };
+type Canaux = { sms: string; fcm: string; psp: string };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
@@ -34,6 +35,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 export function LoyersPage() {
   const [items, setItems] = useState<Echeance[]>([]);
   const [relances, setRelances] = useState<Relance[]>([]);
+  const [canaux, setCanaux] = useState<Canaux | null>(null);
   const [mode, setMode] = useState("ESPECES");
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +43,7 @@ export function LoyersPage() {
     try {
       setItems(await call("/api/v1/loyers"));
       setRelances(await call("/api/v1/loyers/relances").catch(() => []));
+      setCanaux(await call("/api/v1/canaux").catch(() => null));
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
@@ -59,6 +62,10 @@ export function LoyersPage() {
   async function relancer() {
     try {
       setRelances(await call("/api/v1/loyers/relances", { method: "POST" }));
+      if (canaux?.sms === "MOCK") {
+        await call("/api/v1/canaux/sms", { method: "POST", body: JSON.stringify({ telephone: "770000000", message: "Relance loyer" }) });
+      }
+      load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     }
@@ -76,9 +83,12 @@ export function LoyersPage() {
     }
   }
 
-  async function payerEnLigne(id: string) {
+  async function payerEnLigne(id: string, montant: number) {
     const fournisseur = ["WAVE", "ORANGE_MONEY", "CARTE"].includes(mode) ? mode : "WAVE";
     try {
+      if (canaux?.psp === "OFF") throw new Error("PSP desactive");
+      if (canaux?.psp === "LIVE") throw new Error("PSP live non branche");
+      await call("/api/v1/canaux/psp", { method: "POST", body: JSON.stringify({ fournisseur, message: String(montant) }) });
       const intention = await call<Intention>(`/api/v1/loyers/${id}/paiement-en-ligne`, {
         method: "POST",
         body: JSON.stringify({ fournisseur }),
@@ -102,6 +112,7 @@ export function LoyersPage() {
           <button className="rounded-md bg-primary px-4 py-2 text-sm text-white" onClick={generer}>Generer les echeances</button>
         </div>
       </div>
+      <p className="mb-3 text-xs text-slate-500">SMS {canaux?.sms ?? "..."} · FCM {canaux?.fcm ?? "..."} · PSP {canaux?.psp ?? "..."}</p>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <label className="mb-3 block text-sm">Mode d'encaissement
         <select className="ml-2 rounded-md border px-2 py-1" value={mode} onChange={(e) => setMode(e.target.value)}>
@@ -123,7 +134,7 @@ export function LoyersPage() {
               {e.statut !== "PAYEE" && (
                 <div className="flex gap-2">
                   <button className="rounded-md border px-3 py-1 text-sm" onClick={() => payer(e.id, e.montant)}>Encaisser</button>
-                  <button className="rounded-md bg-primary px-3 py-1 text-sm text-white" onClick={() => payerEnLigne(e.id)}>Payer en ligne</button>
+                  <button className="rounded-md bg-primary px-3 py-1 text-sm text-white" onClick={() => payerEnLigne(e.id, e.montant)}>Payer en ligne</button>
                 </div>
               )}
             </div>
@@ -145,7 +156,7 @@ export function LoyersPage() {
           </ul>
         </section>
       )}
-      <p className="mt-6 text-sm"><Link className="text-primary" to="/">Accueil</Link></p>
+      <p className="mt-6 text-sm"><Link className="text-primary" to="/canaux">Journal des canaux</Link></p>
     </main>
   );
 }
