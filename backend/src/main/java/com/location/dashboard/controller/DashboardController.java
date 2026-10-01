@@ -34,7 +34,7 @@ public class DashboardController {
         return service.series(UUID.fromString(auth.getName()));
     }
 
-    @GetMapping(value = "/series.csv", produces = "text/csv")
+    @GetMapping(value = "/series/export", produces = "text/plain")
     public ResponseEntity<String> seriesCsv(Authentication auth) {
         StringBuilder csv = new StringBuilder("mois,du,encaisse,aRecouvrer\n");
         for (SerieMois s : service.series(UUID.fromString(auth.getName()))) {
@@ -42,7 +42,7 @@ public class DashboardController {
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=series.csv")
-                .contentType(MediaType.parseMediaType("text/csv"))
+                .contentType(MediaType.TEXT_PLAIN)
                 .body(csv.toString());
     }
 }
