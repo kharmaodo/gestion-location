@@ -17,6 +17,7 @@ const PRO_LINKS = [
   { to: "/messages", key: "nav.messages" },
   { to: "/notifications", key: "nav.notifications" },
   { to: "/annonces", key: "nav.annonces" },
+  { to: "/canaux", key: "nav.canaux" },
   { to: "/securite", key: "nav.securite" },
 ];
 
