@@ -3,19 +3,15 @@
 Inventaire au **2026-10-01**.
 
 ## Totalement realises (v1)
-US-01 auth JWT, US-02 biens/unites, US-03 publication + photos, US-05 visites, US-06 vitrine/reservations, US-07 avis, US-08 dossier + KYC, US-09 medias MinIO, US-10 contrat, US-11 activation/occupation, US-12 caution, US-13 etat des lieux, US-14 litiges, US-15 loyers/quittances, US-16 messages, US-21 a US-28 (PDF, galerie, penalite, dossier depuis reservation, filtres listes, accueil locataire).
+US-01 a US-16, US-21 a US-29.
+US-04 export CSV `/dashboard/series.csv`.
+US-17 AES-GCM (`/crypto/roundtrip`, cle `app.crypto.key`).
+US-18 agregateur branchable : `MOCK` par defaut, `app.psp.provider=WAVE` quand les cles existent. Bouton payer en ligne + webhook.
+US-30 catalogue FR/EN/WO (menu + inscription).
 
-US-29 supervision : cron 08:30 + notification LOYER_RETARD.
+Smoke : `sh scripts/api-smoke.sh` et `sh scripts/jalon-smoke.sh`.
 
-## Partiel / prevu v1
-| US | Fait | Reste |
-|---|---|---|
-| US-04 | Cartes + barres 6 mois, accueil locataire | Export graphes |
-| US-17 | 2FA TOTP | Compte chiffrement avance |
-| US-18 | Intention + webhook mock + bouton Payer en ligne | Agregateur reel |
-| US-30 | Menu + page inscription FR/EN/WO | Autres formulaires |
-
-## Hors perimetre v1 (prestataire)
-- US-18 Wave / Orange Money / carte reels
-- US-19 push FCM
-- US-20 SMS (email Mailpit + cron relances deja en place)
+## Hors perimetre v1 (cles prestataire)
+- Wave / Orange Money live
+- FCM (US-19)
+- SMS (US-20) — email + cron deja en place
