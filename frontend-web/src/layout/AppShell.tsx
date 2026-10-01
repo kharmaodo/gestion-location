@@ -17,6 +17,7 @@ const PRO_LINKS = [
   { to: "/messages", key: "nav.messages" },
   { to: "/notifications", key: "nav.notifications" },
   { to: "/annonces", key: "nav.annonces" },
+  { to: "/securite", key: "nav.securite" },
 ];
 
 const LOC_LINKS = [
@@ -79,16 +80,6 @@ export function AppShell() {
   const itemClass = ({ isActive }: { isActive: boolean }) =>
     `block rounded-md px-3 py-2 text-sm ${isActive ? "bg-primary text-white" : "text-slate-700 hover:bg-slate-100"}`;
 
-  const menu = (
-    <nav className="space-y-1">
-      {links.map((l) => (
-        <NavLink key={l.to} to={l.to} end={"end" in l ? l.end : false} className={itemClass} onClick={() => setOpen(false)}>
-          {t(l.key)}
-        </NavLink>
-      ))}
-    </nav>
-  );
-
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b bg-white px-4 py-3">
@@ -120,8 +111,13 @@ export function AppShell() {
           <button className="fixed inset-0 z-10 bg-black/30 lg:hidden" onClick={() => setOpen(false)} aria-label={t("nav.menu")} />
         )}
         <aside className={`z-20 w-56 shrink-0 border-r bg-white p-3 ${open ? "fixed inset-y-0 left-0 pt-16 lg:static lg:pt-3" : "hidden lg:block"}`}>
-          {menu}
-          <NavLink to="/securite" className={itemClass} onClick={() => setOpen(false)}>{t("nav.securite")}</NavLink>
+          <nav className="space-y-1">
+            {links.map((l) => (
+              <NavLink key={l.to} to={l.to} end={"end" in l ? l.end : false} className={itemClass} onClick={() => setOpen(false)}>
+                {t(l.key)}
+              </NavLink>
+            ))}
+          </nav>
         </aside>
         <div className="min-w-0 flex-1">
           <Outlet />
