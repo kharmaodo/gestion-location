@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
-# Smoke tests HTTP des APIs.
-set -euo pipefail
+#!/bin/sh
+# Smoke tests HTTP. Compatible dash (sh scripts/api-smoke.sh).
+set -eu
 
 API="${API:-http://localhost:8080}"
 STAMP=$(date +%s)
@@ -10,26 +10,34 @@ PWD="Motdepasse1"
 FAIL=0
 
 expect() {
-  local code="$1" want="$2" label="$3"
-  if [[ "$code" == "$want" || "$code" == "$want"* ]]; then
-    echo "OK  $label ($code)"
-  else
-    echo "KO  $label (attendu $want, obtenu $code)"
-    FAIL=$((FAIL+1))
-  fi
+  code="$1"
+  want="$2"
+  label="$3"
+  case "$code" in
+    "$want"*) echo "OK  $label ($code)" ;;
+    *) echo "KO  $label (attendu $want, obtenu $code)"; FAIL=$((FAIL + 1)) ;;
+  esac
 }
 
 req() {
-  local method="$1" path="$2" data="${3:-}" token="${4:-}"
-  local args=(-sS -w "\n%{http_code}" -X "$method" "$API$path" -H "Content-Type: application/json")
-  if [[ -n "$token" ]]; then args+=(-H "Authorization: Bearer $token"); fi
-  if [[ -n "$data" ]]; then args+=(-d "$data"); fi
-  curl "${args[@]}"
+  method="$1"
+  path="$2"
+  data="${3:-}"
+  token="${4:-}"
+  if [ -n "$token" ] && [ -n "$data" ]; then
+    curl -sS -w "\n%{http_code}" -X "$method" "$API$path" -H "Content-Type: application/json" -H "Authorization: Bearer $token" -d "$data"
+  elif [ -n "$token" ]; then
+    curl -sS -w "\n%{http_code}" -X "$method" "$API$path" -H "Content-Type: application/json" -H "Authorization: Bearer $token"
+  elif [ -n "$data" ]; then
+    curl -sS -w "\n%{http_code}" -X "$method" "$API$path" -H "Content-Type: application/json" -d "$data"
+  else
+    curl -sS -w "\n%{http_code}" -X "$method" "$API$path" -H "Content-Type: application/json"
+  fi
 }
 
 split_body_code() {
-  BODY=$(echo "$1" | sed '$d')
-  CODE=$(echo "$1" | tail -n1)
+  BODY=$(printf '%s\n' "$1" | sed '$d')
+  CODE=$(printf '%s\n' "$1" | tail -n 1)
 }
 
 echo "== Health"
@@ -46,7 +54,7 @@ echo "== Login proprio"
 OUT=$(req POST /api/v1/auth/login "{\"identifiant\":\"$PRO_EMAIL\",\"motDePasse\":\"$PWD\"}")
 split_body_code "$OUT"
 expect "$CODE" 200 "POST /auth/login"
-PRO_TOKEN=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
+PRO_TOKEN=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
 
 echo "== Me"
 OUT=$(req GET /api/v1/me "" "$PRO_TOKEN")
@@ -57,29 +65,31 @@ echo "== Register locataire"
 OUT=$(req POST /api/v1/auth/register "{\"typeCompte\":\"LOCATAIRE\",\"email\":\"$LOC_EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Ibra\",\"nom\":\"Diop\",\"consentementRgpd\":true}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /auth/register locataire"
-LOC_TOKEN=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
-LOC_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('userId',''))")
+LOC_TOKEN=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
+LOC_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('userId',''))")
 
 echo "== Bien + unite"
 OUT=$(req POST /api/v1/biens "{\"designation\":\"Villa smoke\",\"type\":\"MAISON\",\"ville\":\"Dakar\",\"adresse\":\"Mermoz\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /biens"
-BIEN_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+BIEN_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
 OUT=$(req POST "/api/v1/biens/${BIEN_ID}/unites" "{\"libelle\":\"Chambre 1\",\"type\":\"CHAMBRE_SDB\",\"loyer\":85000,\"meuble\":true,\"periodicite\":\"MENSUEL\",\"jourEcheance\":5}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /biens/{id}/unites"
-UNITE_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+UNITE_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
 echo "== Publication : 3 photos min"
 OUT=$(req PUT "/api/v1/biens/${BIEN_ID}/unites/${UNITE_ID}/publication" "{\"publie\":true}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 409 "PUT publication sans photos"
 
-for i in 1 2 3; do
+i=1
+while [ "$i" -le 3 ]; do
   OUT=$(req POST "/api/v1/unites/${UNITE_ID}/medias" "{\"url\":\"https://example.com/p${i}.jpg\",\"type\":\"PHOTO\"}" "$PRO_TOKEN")
   split_body_code "$OUT"
   expect "$CODE" 201 "POST /unites/{id}/medias PHOTO $i"
+  i=$((i + 1))
 done
 
 OUT=$(req GET "/api/v1/public/annonces/${UNITE_ID}/medias")
@@ -95,13 +105,13 @@ CRENEAU=$(python3 -c "from datetime import datetime,timedelta,timezone; print((d
 OUT=$(req POST /api/v1/public/visites "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ibra\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"creneau\":\"$CRENEAU\"}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /public/visites"
-VIS_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+VIS_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
 OUT=$(req GET /api/v1/visites "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "GET /visites"
 
-if [[ -n "$VIS_ID" ]]; then
+if [ -n "$VIS_ID" ]; then
   OUT=$(req POST "/api/v1/visites/${VIS_ID}/statut" "{\"statut\":\"CONFIRMEE\"}" "$PRO_TOKEN")
   split_body_code "$OUT"
   expect "$CODE" 200 "POST /visites/{id}/statut"
@@ -137,7 +147,7 @@ echo "== Dossier locataire"
 OUT=$(req POST /api/v1/locataires "{\"nom\":\"Diop\",\"prenom\":\"Ibra\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"pieceType\":\"CNI\",\"pieceNumero\":\"123\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /locataires"
-DOS_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+DOS_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
 OUT=$(req POST "/api/v1/locataires/${DOS_ID}/kyc" "{\"statut\":\"VALIDE\",\"commentaire\":\"ok\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
@@ -147,7 +157,7 @@ echo "== Contrat"
 OUT=$(req POST /api/v1/contrats "{\"uniteId\":\"$UNITE_ID\",\"dossierId\":\"$DOS_ID\",\"dateDebut\":\"$DEBUT\",\"loyer\":85000}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /contrats"
-CTR_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+CTR_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
 OUT=$(req POST "/api/v1/contrats/${CTR_ID}/activation" "" "$PRO_TOKEN")
 split_body_code "$OUT"
@@ -157,11 +167,11 @@ echo "== Etat des lieux"
 OUT=$(req POST /api/v1/etats-lieux "{\"contratId\":\"$CTR_ID\",\"type\":\"ENTREE\",\"observations\":\"Bon etat\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /etats-lieux ENTREE"
-EDL_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+EDL_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 OUT=$(req GET "/api/v1/etats-lieux?contratId=${CTR_ID}" "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "GET /etats-lieux"
-if [[ -n "$EDL_ID" ]]; then
+if [ -n "$EDL_ID" ]; then
   OUT=$(req POST "/api/v1/etats-lieux/${EDL_ID}/validation" "" "$PRO_TOKEN")
   split_body_code "$OUT"
   expect "$CODE" 200 "POST /etats-lieux/{id}/validation"
@@ -174,11 +184,11 @@ echo "== Litiges"
 OUT=$(req POST /api/v1/litiges "{\"contratId\":\"$CTR_ID\",\"motif\":\"DEGATS\",\"description\":\"Fuites\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /litiges"
-LIT_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+LIT_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 OUT=$(req GET /api/v1/litiges "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "GET /litiges"
-if [[ -n "$LIT_ID" ]]; then
+if [ -n "$LIT_ID" ]; then
   OUT=$(req POST "/api/v1/litiges/${LIT_ID}/decision" "{\"statut\":\"RESOLU\",\"decision\":\"Repare\"}" "$PRO_TOKEN")
   split_body_code "$OUT"
   expect "$CODE" 200 "POST /litiges/{id}/decision"
@@ -188,9 +198,9 @@ echo "== Loyers"
 OUT=$(req POST /api/v1/loyers/generation "" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 200 "POST /loyers/generation"
-ECH_ID=$(echo "$BODY" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if d else '')")
+ECH_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if d else '')")
 
-if [[ -n "$ECH_ID" ]]; then
+if [ -n "$ECH_ID" ]; then
   OUT=$(req POST "/api/v1/loyers/${ECH_ID}/paiements" "{\"montant\":10000,\"mode\":\"ESPECES\"}" "$PRO_TOKEN")
   split_body_code "$OUT"
   expect "$CODE" 200 "POST /loyers/{id}/paiements partiel"
@@ -208,9 +218,9 @@ expect "$CODE" 200 "GET /dashboard"
 OUT=$(req POST /api/v1/conversations "{\"destinataireId\":\"$LOC_ID\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /conversations"
-CONV_ID=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+CONV_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
-if [[ -n "$CONV_ID" ]]; then
+if [ -n "$CONV_ID" ]; then
   OUT=$(req POST "/api/v1/conversations/${CONV_ID}/messages" "{\"corps\":\"Bonjour\"}" "$PRO_TOKEN")
   split_body_code "$OUT"
   expect "$CODE" 201 "POST /conversations/{id}/messages"
@@ -222,8 +232,8 @@ split_body_code "$OUT"
 expect "$CODE" 403 "POST /biens en tant que LOCATAIRE"
 
 echo
-if [[ "$FAIL" -eq 0 ]]; then
-  echo "TOUS LES SMOKE TESTS SONT PASSÉS"
+if [ "$FAIL" -eq 0 ]; then
+  echo "TOUS LES SMOKE TESTS SONT PASSES"
   exit 0
 fi
 echo "$FAIL test(s) en echec"
