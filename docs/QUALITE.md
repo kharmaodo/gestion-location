@@ -1,28 +1,29 @@
 # Qualite
 
 ## Unitaire
-`mvn -B test` dans `backend`. Le workflow `quality` le lance sur chaque PR.
-
-## Sonar
-Secrets `SONAR_TOKEN` et `SONAR_HOST_URL`. Sans token, le job Sonar est ignore. Scanner : `sonar-project.properties`.
+- Backend : `cd backend && mvn -B test`
+- Frontend : `cd frontend-web && npm test`
+- Le workflow `quality` lance les deux sur chaque PR.
 
 ## Charge et rate-limit
-Backend local, puis :
+Backend demarre, depuis la racine :
 
 ```bash
 k6 run load/k6-sante.js
-# alternative
 ab -n 200 -c 20 http://localhost:8080/actuator/health
 ```
 
-Le scenario k6 accepte 200 sur `/actuator/health` et 401 ou 429 sur un login inconnu. Le 429 n'apparaitra que si un rate-limit est branche devant l'API (Spring Cloud Gateway, NGINX ou Envoy).
+`POST /api/v1/auth/login` est limite a 30/min/IP (`LOGIN_RATE_PER_MINUTE`). Le health n'est pas limite.
 
 ## Intrusion
-Baseline open source, API locale :
+Backend local, puis :
 
 ```bash
-docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:8080/actuator/health
+sh scripts/zap-baseline.sh
 ```
 
+## Sonar
+Secrets `SONAR_TOKEN` et `SONAR_HOST_URL`, puis lancement manuel du workflow `quality`. JaCoCo ecrit `backend/target/site/jacoco/jacoco.xml`.
+
 ## Repartition de charge
-Le chart Helm prod a `replicaCount: 2`. Le load-balancing est celui du Service Kubernetes. Il n'y a pas encore d'Ingress controller ni de Gateway dans le chart.
+Le chart prod a `replicaCount: 2`. La repartition est celle du Service Kubernetes. Pas d'Ingress dans le chart.
