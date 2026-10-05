@@ -30,14 +30,22 @@ class ServicesReglesTest {
             "com.location.contrats.service.EtatLieuxService",
             "com.location.contrats.service.RestitutionCautionService",
             "com.location.contrats.service.SignatureService",
+            "com.location.dashboard.service.AlerteService",
+            "com.location.dashboard.service.DashboardService",
             "com.location.identites.service.AuthService",
             "com.location.identites.service.MailService",
             "com.location.i18n.I18nService",
-            "com.location.paiements.service.RelanceService",
-            "com.location.messages.service.MessageService",
             "com.location.litiges.service.LitigeService",
+            "com.location.locataires.service.DossierService",
+            "com.location.messagerie.service.MessagerieService",
+            "com.location.notifications.service.NotificationHub",
             "com.location.notifications.service.NotificationService",
-            "com.location.visites.service.VisiteService"
+            "com.location.paiements.service.PaiementEnLigneService",
+            "com.location.paiements.service.PaiementService",
+            "com.location.paiements.service.RelanceService",
+            "com.location.reservations.service.ReservationService",
+            "com.location.visites.service.VisiteService",
+            "com.location.vitrine.service.VitrineService"
     );
 
     @Test
@@ -50,8 +58,12 @@ class ServicesReglesTest {
             for (int i = 0; i < params.length; i++) {
                 if (params[i] == String.class) {
                     args[i] = "MOCK";
-                } else if (params[i].isPrimitive()) {
-                    args[i] = params[i] == boolean.class ? false : 0;
+                } else if (params[i] == int.class) {
+                    args[i] = 0;
+                } else if (params[i] == long.class) {
+                    args[i] = 0L;
+                } else if (params[i] == boolean.class) {
+                    args[i] = false;
                 } else {
                     args[i] = mock(params[i]);
                 }

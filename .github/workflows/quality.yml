@@ -1,6 +1,8 @@
 name: quality
 on:
   pull_request:
+  push:
+    branches: [feat/qualite-sonar-k6, develop]
   workflow_dispatch:
 jobs:
   unit:
@@ -18,7 +20,7 @@ jobs:
       - run: mvn -B test
   sonar:
     needs: unit
-    if: ${{ secrets.SONAR_TOKEN != '' }}
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
