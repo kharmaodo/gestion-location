@@ -2,34 +2,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api, clearSession, MeResponse } from "../api";
 import { useI18n } from "../i18n";
+import { linksFor } from "../nav";
 import { notificationsApi } from "../notifications";
-
-const PRO_LINKS = [
-  { to: "/", key: "nav.home", end: true },
-  { to: "/biens", key: "nav.biens" },
-  { to: "/locataires", key: "nav.locataires" },
-  { to: "/contrats", key: "nav.contrats" },
-  { to: "/caution", key: "nav.caution" },
-  { to: "/loyers", key: "nav.loyers" },
-  { to: "/litiges", key: "nav.litiges" },
-  { to: "/visites", key: "nav.visites" },
-  { to: "/reservations", key: "nav.reservations" },
-  { to: "/messages", key: "nav.messages" },
-  { to: "/notifications", key: "nav.notifications" },
-  { to: "/annonces", key: "nav.annonces" },
-  { to: "/securite", key: "nav.securite" },
-];
-
-const LOC_LINKS = [
-  { to: "/", key: "nav.home", end: true },
-  { to: "/annonces", key: "nav.annonces" },
-  { to: "/contrats", key: "nav.contrats" },
-  { to: "/caution", key: "nav.caution" },
-  { to: "/litiges", key: "nav.litiges" },
-  { to: "/messages", key: "nav.messages" },
-  { to: "/notifications", key: "nav.notifications" },
-  { to: "/securite", key: "nav.securite" },
-];
 
 export function AppShell() {
   const navigate = useNavigate();
@@ -49,9 +23,9 @@ export function AppShell() {
     notificationsApi.list().then((list) => setNonLues(list.filter((n) => !n.lu).length)).catch(() => undefined);
   }, [navigate, location.pathname]);
 
+  const links = linksFor(me?.roles ?? []);
   const proprio = me?.roles.includes("PROPRIETAIRE") ?? false;
-  const links = proprio ? PRO_LINKS : LOC_LINKS;
-  const nom = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "…";
+  const nom = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "\u2026";
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -113,7 +87,7 @@ export function AppShell() {
         <aside className={`z-20 w-56 shrink-0 border-r bg-white p-3 ${open ? "fixed inset-y-0 left-0 pt-16 lg:static lg:pt-3" : "hidden lg:block"}`}>
           <nav className="space-y-1">
             {links.map((l) => (
-              <NavLink key={l.to} to={l.to} end={"end" in l ? l.end : false} className={itemClass} onClick={() => setOpen(false)}>
+              <NavLink key={l.to} to={l.to} end={l.end ?? false} className={itemClass} onClick={() => setOpen(false)}>
                 {t(l.key)}
               </NavLink>
             ))}
