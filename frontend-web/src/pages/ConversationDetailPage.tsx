@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getAccessToken } from "../api";
+import { nouveaux } from "../flux";
 
 type Msg = { id: string; auteurId: string; corps: string; creeLe: string };
 type Conv = { id: string; messages?: Msg[] };
@@ -20,6 +21,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 export function ConversationDetailPage() {
   const { id } = useParams();
   const [conv, setConv] = useState<Conv | null>(null);
+  const [live, setLive] = useState<string[]>([]);
   const [corps, setCorps] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -27,11 +29,17 @@ export function ConversationDetailPage() {
     if (!id) return;
     try {
       setConv(await call(`/api/v1/conversations/${id}`));
+      const flux = await call<string[]>(`/api/v1/conversations/${id}/flux`);
+      setLive(flux);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     }
   }
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+    const timer = window.setInterval(load, 4000);
+    return () => window.clearInterval(timer);
+  }, [id]);
 
   async function send(e: FormEvent) {
     e.preventDefault();
@@ -46,6 +54,7 @@ export function ConversationDetailPage() {
   }
 
   if (!conv) return <p className="p-8">{error ?? "Chargement..."}</p>;
+  const extra = nouveaux((conv.messages ?? []).map((m) => m.corps), live);
   return (
     <main className="mx-auto max-w-2xl p-8">
       <Link className="text-sm text-primary" to="/messages">Messages</Link>
@@ -55,6 +64,9 @@ export function ConversationDetailPage() {
             <p>{m.corps}</p>
             <p className="text-xs text-slate-500">{m.auteurId} · {m.creeLe}</p>
           </div>
+        ))}
+        {extra.map((corpsLive, index) => (
+          <div key={`live-${index}`} className="rounded-lg bg-amber-50 p-3 text-sm">{corpsLive}</div>
         ))}
       </div>
       <form className="mt-4 flex gap-2" onSubmit={send}>
