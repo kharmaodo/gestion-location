@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,15 +15,23 @@ public class CanalMockService {
     private final String sms;
     private final String fcm;
     private final String psp;
+    private final String signature;
     private final List<Map<String, String>> journal = new ArrayList<>();
 
+    public CanalMockService(String sms, String fcm, String psp) {
+        this(sms, fcm, psp, "MOCK");
+    }
+
+    @Autowired
     public CanalMockService(
             @Value("${app.channels.sms:MOCK}") String sms,
             @Value("${app.channels.fcm:MOCK}") String fcm,
-            @Value("${app.channels.psp:MOCK}") String psp) {
+            @Value("${app.channels.psp:MOCK}") String psp,
+            @Value("${app.channels.signature:MOCK}") String signature) {
         this.sms = sms.toUpperCase();
         this.fcm = fcm.toUpperCase();
         this.psp = psp.toUpperCase();
+        this.signature = signature.toUpperCase();
     }
 
     public Map<String, Object> statut() {
@@ -30,6 +39,7 @@ public class CanalMockService {
                 "sms", sms,
                 "fcm", fcm,
                 "psp", psp,
+                "signature", signature,
                 "journal", List.copyOf(journal));
     }
 
