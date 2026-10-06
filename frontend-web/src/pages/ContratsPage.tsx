@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { api } from "../api";
+import { api, getAccessToken } from "../api";
 import { Contrat, contratsApi } from "../contrats";
+import { signatureLibelle } from "../signature";
+
+const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 export function ContratsPage() {
   const [params] = useSearchParams();
@@ -10,9 +13,14 @@ export function ContratsPage() {
   const [items, setItems] = useState<Contrat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [proprio, setProprio] = useState(false);
+  const [signature, setSignature] = useState("MOCK");
   useEffect(() => {
     api.me().then((m) => setProprio(m.roles.includes("PROPRIETAIRE"))).catch(() => undefined);
     contratsApi.mes().then(setItems).catch((e) => setError(e.message));
+    fetch(`${API}/api/v1/canaux`, { headers: { Authorization: `Bearer ${getAccessToken()}` } })
+      .then((r) => r.json())
+      .then((body) => setSignature(body.signature ?? "MOCK"))
+      .catch(() => undefined);
   }, []);
   const filtered = useMemo(
     () =>
@@ -33,6 +41,7 @@ export function ContratsPage() {
           <Link className="rounded-md bg-primary px-4 py-2 text-sm text-white" to="/contrats/nouveau">+ Contrat</Link>
         )}
       </div>
+      <p className="mb-4 text-sm text-slate-600">{signatureLibelle(signature)}</p>
       <div className="mb-4 flex flex-wrap gap-2 text-sm">
         {[
           ["TOUS", "Tous"],
