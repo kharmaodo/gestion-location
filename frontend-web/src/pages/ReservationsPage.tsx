@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAccessToken } from "../api";
-import { verrouReservation } from "../verrou";
+import { gardeReservation, verrouReservation } from "../verrou";
 
 type Resa = {
   id: string;
@@ -47,7 +47,7 @@ export function ReservationsPage() {
   }
 
   const filtered = useMemo(
-    () => items.filter((r) => filtre === "TOUS" || r.statut === filtre),
+    () => items.filter((r) => gardeReservation(r.statut, filtre)),
     [items, filtre]
   );
 
@@ -64,6 +64,7 @@ export function ReservationsPage() {
           ["EN_ATTENTE", "En attente"],
           ["ACCEPTEE", "Acceptees"],
           ["REFUSEE", "Refusees"],
+          ["EXPIREE", "Expirees"],
         ].map(([v, l]) => (
           <button
             key={v}

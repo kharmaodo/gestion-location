@@ -4,3 +4,7 @@ export function verrouReservation(statut: string) {
   if (statut === "EXPIREE") return "Verrou expire, le creneau est libre.";
   return "Ne bloque plus le creneau.";
 }
+
+export function gardeReservation(statut: string, filtre: string) {
+  return filtre === "TOUS" || statut === filtre;
+}
