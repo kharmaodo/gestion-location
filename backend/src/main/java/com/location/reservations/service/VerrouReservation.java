@@ -18,4 +18,11 @@ public final class VerrouReservation {
         }
         return "EN_ATTENTE".equals(statut) && creeLe != null && creeLe.isAfter(seuil(maintenant));
     }
+
+    public static String statutVisible(String statut, Instant creeLe, Instant maintenant) {
+        if ("EN_ATTENTE".equals(statut) && !tient(statut, creeLe, maintenant)) {
+            return "EXPIREE";
+        }
+        return statut;
+    }
 }
