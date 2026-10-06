@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAccessToken } from "../api";
+import { verrouReservation } from "../verrou";
 
 type Resa = {
   id: string;
@@ -56,6 +57,7 @@ export function ReservationsPage() {
         <h1 className="text-2xl font-semibold text-primary">Reservations</h1>
         <Link className="text-sm text-primary" to="/annonces">Voir les annonces</Link>
       </div>
+      <p className="mb-4 text-sm text-slate-600">Une demande en attente bloque le creneau 24 h. Une acceptee le bloque jusqu'au contrat.</p>
       <div className="mb-4 flex flex-wrap gap-2 text-sm">
         {[
           ["TOUS", "Tous"],
@@ -80,6 +82,7 @@ export function ReservationsPage() {
               <div>
                 <p className="font-medium">{r.prenom} {r.nom} · {r.telephone ?? "—"}</p>
                 <p className="text-sm">{r.dateDebut} → {r.dateFin}</p>
+                <p className="text-xs text-slate-500">{verrouReservation(r.statut)}</p>
                 {r.message && <p className="mt-1 text-sm text-slate-600">{r.message}</p>}
               </div>
               <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{r.statut}</span>
@@ -102,7 +105,7 @@ export function ReservationsPage() {
         ))}
         {filtered.length === 0 && !error && (
           <p className="rounded-lg bg-white p-4 text-sm text-slate-500 shadow">
-            Aucune reservation. Elles arrivent depuis le formulaire public d’une annonce.
+            Aucune reservation. Elles arrivent depuis le formulaire public d'une annonce.
           </p>
         )}
       </div>
