@@ -21,14 +21,17 @@ public class MessagerieService {
     private final ConversationRepository conversations;
     private final MessageRepository messages;
     private final UtilisateurRepository utilisateurs;
+    private final MessageBus bus;
 
     public MessagerieService(
             ConversationRepository conversations,
             MessageRepository messages,
-            UtilisateurRepository utilisateurs) {
+            UtilisateurRepository utilisateurs,
+            MessageBus bus) {
         this.conversations = conversations;
         this.messages = messages;
         this.utilisateurs = utilisateurs;
+        this.bus = bus;
     }
 
     @Transactional(readOnly = true)
@@ -72,6 +75,7 @@ public class MessagerieService {
         messages.save(m);
         c.setMajLe(Instant.now());
         conversations.save(c);
+        bus.publish(c.getId(), m.getCorps());
         return new MessageResponse(m.getId(), m.getAuteurId(), m.getCorps(), m.getCreeLe());
     }
 
