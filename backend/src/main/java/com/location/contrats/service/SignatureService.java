@@ -24,10 +24,12 @@ public class SignatureService {
     private static final Set<String> ROLES = Set.of("PROPRIETAIRE", "LOCATAIRE");
     private final SignatureRepository signatures;
     private final ContratRepository contrats;
+    private final SignatureMode mode;
 
-    public SignatureService(SignatureRepository signatures, ContratRepository contrats) {
+    public SignatureService(SignatureRepository signatures, ContratRepository contrats, SignatureMode mode) {
         this.signatures = signatures;
         this.contrats = contrats;
+        this.mode = mode;
     }
 
     @Transactional
@@ -59,6 +61,7 @@ public class SignatureService {
 
     @Transactional
     public SignatureResponse signer(String rawToken) {
+        mode.reference();
         SignatureEntity e = signatures.findByTokenHash(sha256(rawToken))
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Lien de signature invalide"));
         if (!"EN_ATTENTE".equals(e.getStatut())) {
