@@ -49,3 +49,5 @@ app:
     sms: ${SMS_MODE:MOCK}
     fcm: ${FCM_MODE:MOCK}
     psp: ${PSP_MODE:MOCK}
+  ratelimit:
+    login-per-minute: ${LOGIN_RATE_PER_MINUTE:30}
