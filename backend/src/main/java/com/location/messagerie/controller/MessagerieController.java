@@ -4,6 +4,7 @@ import com.location.messagerie.dto.ConversationRequest;
 import com.location.messagerie.dto.ConversationResponse;
 import com.location.messagerie.dto.MessageRequest;
 import com.location.messagerie.dto.MessageResponse;
+import com.location.messagerie.service.MessageBus;
 import com.location.messagerie.service.MessagerieService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -22,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/conversations")
 public class MessagerieController {
     private final MessagerieService service;
+    private final MessageBus bus;
 
-    public MessagerieController(MessagerieService service) {
+    public MessagerieController(MessagerieService service, MessageBus bus) {
         this.service = service;
+        this.bus = bus;
     }
 
     @GetMapping
@@ -35,6 +38,12 @@ public class MessagerieController {
     @GetMapping("/{id}")
     public ConversationResponse detail(Authentication auth, @PathVariable UUID id) {
         return service.detail(UUID.fromString(auth.getName()), id);
+    }
+
+    @GetMapping("/{id}/flux")
+    public List<String> flux(Authentication auth, @PathVariable UUID id) {
+        service.detail(UUID.fromString(auth.getName()), id);
+        return bus.recent(id);
     }
 
     @PostMapping
