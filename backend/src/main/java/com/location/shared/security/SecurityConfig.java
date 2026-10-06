@@ -22,7 +22,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) { this.jwtAuthFilter = jwtAuthFilter; }
+    private final LoginRateLimitFilter loginRateLimitFilter;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, LoginRateLimitFilter loginRateLimitFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.loginRateLimitFilter = loginRateLimitFilter;
+    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -35,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/public/**", "/api/v1/caution").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
+                .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
