@@ -41,7 +41,7 @@ public class ReservationService {
         UniteLocativeEntity unite = unites.findById(req.uniteId())
                 .filter(UniteLocativeEntity::isPublie)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
-        if (reservations.countChevauchements(unite.getId(), req.dateDebut(), req.dateFin()) > 0) {
+        if (reservations.countChevauchements(unite.getId(), req.dateDebut(), req.dateFin(), VerrouReservation.seuil(Instant.now())) > 0) {
             throw new ApiException(HttpStatus.CONFLICT, "creneau indisponible");
         }
         BienImmobilierEntity bien = biens.findById(unite.getBienId()).orElseThrow();
