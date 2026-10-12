@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Bien, Media, biensApi } from "../biens";
+import { peutPublier } from "../regles-suite";
 
 export function BienDetailPage() {
   const { id } = useParams();
@@ -81,7 +82,10 @@ export function BienDetailPage() {
       <p className="text-sm text-slate-600">{bien.type} · {bien.ville} · {bien.adresse}</p>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       <section className="mt-6 space-y-3">
-        {(bien.unitesDetail ?? []).map((u) => (
+        {(bien.unitesDetail ?? []).map((u) => {
+          const photos = (medias[u.id] ?? []).length;
+          const pret = peutPublier(photos);
+          return (
           <div key={u.id} className="rounded-lg bg-white p-4 shadow">
             <div className="flex justify-between">
               <div>
@@ -94,7 +98,7 @@ export function BienDetailPage() {
               {(medias[u.id] ?? []).map((m) => (
                 <img key={m.id} src={m.url} alt="" className="h-20 w-20 rounded object-cover bg-slate-100" />
               ))}
-              <span className="self-center text-xs text-slate-500">{(medias[u.id] ?? []).length}/3 photos min</span>
+              <span className="self-center text-xs text-slate-500">{photos}/3 photos min</span>
             </div>
             <label className="mt-2 block text-sm">
               Ajouter des photos (fichier)
@@ -118,11 +122,16 @@ export function BienDetailPage() {
                 <option value="MENSUEL">Mensuel</option>
               </select>
             </label>
-            <button className="mt-2 rounded-md border px-3 py-1 text-sm" onClick={() => togglePub(u.id, !u.publie)}>
-              {u.publie ? "Depublier" : "Publier"}
+            <button
+              className="mt-2 rounded-md border px-3 py-1 text-sm disabled:opacity-50"
+              disabled={!u.publie && !pret}
+              onClick={() => togglePub(u.id, !u.publie)}
+            >
+              {u.publie ? "Depublier" : pret ? "Publier" : "Publier (3 photos min)"}
             </button>
           </div>
-        ))}
+          );
+        })}
       </section>
       <form className="mt-8 space-y-3 rounded-lg bg-white p-4 shadow" onSubmit={addUnite}>
         <h2 className="font-medium">Ajouter une unite</h2>

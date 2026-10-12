@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api, getAccessToken, MeResponse } from "../api";
 import { Certificat, Contacts, Contrat, EtatLieux, Resiliation, Restitution, Signature, contratsApi } from "../contrats";
 import { locatairesApi } from "../locataires";
+import { penaliteResiliation } from "../regles";
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
@@ -32,7 +33,7 @@ export function ContratDetailPage() {
   const nomProprio = [me?.prenom, me?.nom].filter(Boolean).join(" ") || me?.email || "";
   const nomLoc = contacts?.locataire?.nom || nomLocataire;
   const jours = Number(preavis) || 0;
-  const penaliteEstimee = contrat && jours < 30 ? contrat.loyer : 0;
+  const penaliteEstimee = contrat ? penaliteResiliation(jours, contrat.loyer) : 0;
 
   async function nomDepuisReservation(reservationId?: string, uniteId?: string) {
     const token = getAccessToken();

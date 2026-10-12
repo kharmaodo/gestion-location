@@ -4,6 +4,7 @@ import { api, clearSession, MeResponse } from "../api";
 import { useI18n } from "../i18n";
 import { cibleRecherche, liensPourRole } from "../menu";
 import { notificationsApi } from "../notifications";
+import { nonLues as compterNonLues } from "../regles-suite";
 
 export function AppShell() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function AppShell() {
       clearSession();
       navigate("/connexion");
     });
-    notificationsApi.list().then((list) => setNonLues(list.filter((n) => !n.lu).length)).catch(() => undefined);
+    notificationsApi.list().then((list) => setNonLues(compterNonLues(list))).catch(() => undefined);
   }, [navigate, location.pathname]);
 
   const proprio = me?.roles.includes("PROPRIETAIRE") ?? false;
