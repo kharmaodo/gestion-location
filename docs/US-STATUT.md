@@ -1,6 +1,6 @@
 # Statut des user stories — gestion-location
 
-Inventaire au **2026-10-08**.
+Inventaire au **2026-10-12**.
 
 ## Totalement realises (v1)
 US-01 a US-16, US-21 a US-29.
@@ -19,7 +19,7 @@ Smoke : `sh scripts/api-smoke.sh` et `sh scripts/jalon-smoke.sh`.
 
 Smoke v1.1 : `sh scripts/v11-smoke.sh`, `sh scripts/signature-smoke.sh`, `sh scripts/ratelimit-smoke.sh`.
 
-## Tests unitaires
+## Tests unitaires backend
 Une regle Mockito par US produit, plus Flyway Testcontainers et le rate-limit.
 
 | Lot | Fichier | Regles |
@@ -30,7 +30,18 @@ Une regle Mockito par US produit, plus Flyway Testcontainers et le rate-limit.
 
 Deja couverts a part : US-12 caution, US-17 chiffrement, US-22 signature, US-24 verrou, US-30 i18n.
 
-Frontend Vitest : CSV, flux, signature, filtre reservation. Les pages n'ont pas de test de composant.
+## Tests unitaires frontend (Vitest)
+| Fichier | Regles |
+| --- | --- |
+| `csv.test.ts` | cellules CSV |
+| `flux.test.ts` | bus de messages |
+| `signature.test.ts` | libelle MOCK/LIVE/OFF |
+| `verrou.test.ts` | filtre reservations expirees |
+| `menu.test.ts` | menu selon le role, pas de doublon Securite, cible de recherche |
+| `regles.test.ts` | plafond caution 3 mois, penalite preavis < 30 j, restitution sans EDL sortie, contacts masques |
+| `regles-suite.test.ts` | publication refusee sous 3 photos, PARTIEL puis PAYEE, KYC VALIDE/REJETE, notifications non lues |
+
+Les pages React n'ont pas de test de composant.
 
 ## Hors perimetre (cles prestataire)
 - Wave / Orange Money live
