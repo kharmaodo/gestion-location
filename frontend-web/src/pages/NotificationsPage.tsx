@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Notification, notificationsApi } from "../notifications";
+import { nonLues } from "../regles-suite";
 
 export function NotificationsPage() {
   const [items, setItems] = useState<Notification[]>([]);
@@ -19,9 +20,13 @@ export function NotificationsPage() {
     }
   }
 
+  const compte = nonLues(items);
+
   return (
     <main className="mx-auto max-w-3xl p-8">
-      <h1 className="mb-6 text-2xl font-semibold text-primary">Notifications</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-primary">
+        Notifications{compte > 0 ? ` (${compte} non lues)` : ""}
+      </h1>
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
       <div className="space-y-2">
         {items.map((n) => (
