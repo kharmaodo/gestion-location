@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api, getAccessToken, MeResponse } from "../api";
 import { Certificat, Contacts, Contrat, EtatLieux, Resiliation, Restitution, Signature, contratsApi } from "../contrats";
 import { locatairesApi } from "../locataires";
-import { penaliteResiliation } from "../regles";
+import { contactsMasques, penaliteResiliation } from "../regles";
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
@@ -229,7 +229,9 @@ export function ContratDetailPage() {
       {contacts && (
         <section className="mt-4 rounded-lg bg-white p-4 text-sm shadow">
           <h2 className="mb-2 font-medium">Contacts</h2>
-          {contacts.revele ? (
+          {contactsMasques(contacts.revele) ? (
+            <p className="text-slate-500">{contacts.motif ?? "Contacts masques."}</p>
+          ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <p className="text-xs text-slate-500">Proprietaire</p>
@@ -240,8 +242,6 @@ export function ContratDetailPage() {
                 <p>{contacts.locataire?.nom ?? "—"}</p>
               </div>
             </div>
-          ) : (
-            <p className="text-slate-500">{contacts.motif ?? "Contacts masques."}</p>
           )}
         </section>
       )}

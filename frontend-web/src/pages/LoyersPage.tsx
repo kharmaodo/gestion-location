@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAccessToken } from "../api";
+import { statutApresPaiement } from "../regles-suite";
 
 type Paiement = { id: string; montant: number; mode: string; recuNumero: string; payeLe: string };
 type Echeance = {
@@ -113,16 +114,20 @@ export function LoyersPage() {
         </select>
       </label>
       <div className="space-y-3">
-        {items.map((e) => (
+        {items.map((e) => {
+          const deja = (e.paiements ?? []).reduce((s, p) => s + p.montant, 0);
+          const statut = statutApresPaiement(0, deja, e.montant);
+          const reste = Math.max(e.montant - deja, 0);
+          return (
           <div key={e.id} className="rounded-lg bg-white p-4 shadow">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{e.periodeDebut} → {e.periodeFin}</p>
-                <p className="text-sm text-slate-600">{e.montant} {e.devise} · {e.statut}</p>
+                <p className="text-sm text-slate-600">{e.montant} {e.devise} · {statut} · reste {reste}</p>
               </div>
-              {e.statut !== "PAYEE" && (
+              {statut !== "PAYEE" && (
                 <div className="flex gap-2">
-                  <button className="rounded-md border px-3 py-1 text-sm" onClick={() => payer(e.id, e.montant)}>Encaisser</button>
+                  <button className="rounded-md border px-3 py-1 text-sm" onClick={() => payer(e.id, reste || e.montant)}>Encaisser</button>
                   <button className="rounded-md bg-primary px-3 py-1 text-sm text-white" onClick={() => payerEnLigne(e.id)}>Payer en ligne</button>
                 </div>
               )}
@@ -133,7 +138,8 @@ export function LoyersPage() {
               ))}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </div>
       {relances.length > 0 && (
         <section className="mt-6 rounded-lg bg-white p-4 text-sm shadow">
