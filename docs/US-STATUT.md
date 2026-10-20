@@ -49,6 +49,8 @@ Deja couverts a part : US-12 caution, US-17 chiffrement, US-22 signature, US-24 
 
 Setup : `@testing-library/react` + jsdom, tests exclus du `tsc -b`.
 
+Couverture : `npm run test:coverage` (v8). Seuils sur `regles.ts`, `regles-suite.ts`, `menu.ts` : 80 % lignes / fonctions / statements, 70 % branches. Le job `quality` frontend execute ce script.
+
 Ces regles sont branchees dans les ecrans (pas de code mort) :
 - `peutPublier` desactive Publier sous 3 photos (`BienDetailPage`).
 - `penaliteResiliation` estime la penalite (`ContratDetailPage`).
@@ -56,7 +58,7 @@ Ces regles sont branchees dans les ecrans (pas de code mort) :
 - `statutApresPaiement` affiche le statut et le reste a payer (`LoyersPage`).
 - `nonLues` compte les notifications (`AppShell`, `NotificationsPage`).
 
-Toutes les regles pures branchees ont maintenant un test de composant.
+Toutes les regles pures branchees ont un test de composant et un gate de couverture.
 
 ## Hors perimetre (cles prestataire)
 - Wave / Orange Money live
