@@ -2,6 +2,7 @@ package com.location.messagerie.controller;
 
 import com.location.messagerie.dto.ConversationRequest;
 import com.location.messagerie.dto.ConversationResponse;
+import com.location.messagerie.dto.DestinataireResponse;
 import com.location.messagerie.dto.MessageRequest;
 import com.location.messagerie.dto.MessageResponse;
 import com.location.messagerie.service.MessageBus;
@@ -33,6 +34,11 @@ public class MessagerieController {
     @GetMapping
     public List<ConversationResponse> lister(Authentication auth) {
         return service.lister(UUID.fromString(auth.getName()));
+    }
+
+    @GetMapping("/destinataires")
+    public List<DestinataireResponse> destinataires(Authentication auth) {
+        return service.destinataires(UUID.fromString(auth.getName()));
     }
 
     @GetMapping("/{id}")

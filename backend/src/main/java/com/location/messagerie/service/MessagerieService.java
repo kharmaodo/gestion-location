@@ -1,8 +1,10 @@
 package com.location.messagerie.service;
 
+import com.location.identites.entity.UtilisateurEntity;
 import com.location.identites.repository.UtilisateurRepository;
 import com.location.messagerie.dto.ConversationRequest;
 import com.location.messagerie.dto.ConversationResponse;
+import com.location.messagerie.dto.DestinataireResponse;
 import com.location.messagerie.dto.MessageResponse;
 import com.location.messagerie.entity.ConversationEntity;
 import com.location.messagerie.entity.MessageEntity;
@@ -42,6 +44,15 @@ public class MessagerieService {
     @Transactional(readOnly = true)
     public ConversationResponse detail(UUID userId, UUID id) {
         return toDto(owned(userId, id), true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DestinataireResponse> destinataires(UUID userId) {
+        return utilisateurs.findAll().stream()
+                .filter(u -> !userId.equals(u.getId()))
+                .filter(u -> "ACTIF".equals(u.getStatut()))
+                .map(this::toDestinataire)
+                .toList();
     }
 
     @Transactional
@@ -95,5 +106,11 @@ public class MessagerieService {
                         .toList()
                 : List.of();
         return new ConversationResponse(c.getId(), c.getParticipantA(), c.getParticipantB(), c.getUniteId(), list);
+    }
+
+    private DestinataireResponse toDestinataire(UtilisateurEntity u) {
+        String prenom = u.getPrenom() == null ? "" : u.getPrenom();
+        String nom = u.getNom() == null ? "" : u.getNom();
+        return new DestinataireResponse(u.getId(), prenom, nom);
     }
 }

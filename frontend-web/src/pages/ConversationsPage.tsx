@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAccessToken } from "../api";
 
@@ -7,6 +7,12 @@ type Conversation = {
   participantA: string;
   participantB: string;
   uniteId?: string;
+};
+
+type Destinataire = {
+  id: string;
+  prenom: string;
+  nom: string;
 };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -21,14 +27,27 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+function libelle(d: Destinataire): string {
+  const nom = `${d.prenom} ${d.nom}`.trim();
+  return nom.length > 0 ? nom : d.id;
+}
+
 export function ConversationsPage() {
   const [items, setItems] = useState<Conversation[]>([]);
+  const [destinataires, setDestinataires] = useState<Destinataire[]>([]);
   const [dest, setDest] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const noms = useMemo(() => new Map(destinataires.map((d) => [d.id, libelle(d)])), [destinataires]);
 
   async function load() {
     try {
-      setItems(await call("/api/v1/conversations"));
+      const [cs, ds] = await Promise.all([
+        call<Conversation[]>("/api/v1/conversations"),
+        call<Destinataire[]>("/api/v1/conversations/destinataires"),
+      ]);
+      setItems(cs);
+      setDestinataires(ds);
+      setDest((prev) => prev || ds[0]?.id || "");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     }
@@ -48,18 +67,27 @@ export function ConversationsPage() {
     }
   }
 
+  function nomDe(id: string): string {
+    return noms.get(id) ?? id;
+  }
+
   return (
     <main className="mx-auto max-w-3xl p-8">
       <h1 className="mb-4 text-2xl font-semibold text-primary">Messages</h1>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <form className="mb-6 flex gap-2" onSubmit={ouvrir}>
-        <input className="flex-1 rounded-md border px-3 py-2 text-sm" placeholder="UUID destinataire" value={dest} onChange={(e) => setDest(e.target.value)} required />
-        <button className="rounded-md bg-primary px-3 py-2 text-sm text-white">Nouvelle conversation</button>
+        <select className="flex-1 rounded-md border px-3 py-2 text-sm" value={dest} onChange={(e) => setDest(e.target.value)} required>
+          {destinataires.length === 0 && <option value="">Aucun destinataire</option>}
+          {destinataires.map((d) => (
+            <option key={d.id} value={d.id}>{libelle(d)}</option>
+          ))}
+        </select>
+        <button className="rounded-md bg-primary px-3 py-2 text-sm text-white" disabled={!dest}>Nouvelle conversation</button>
       </form>
       <div className="space-y-2">
         {items.map((c) => (
           <Link key={c.id} to={`/messages/${c.id}`} className="block rounded-lg bg-white p-4 shadow">
-            <p className="text-sm">{c.participantA} ↔ {c.participantB}</p>
+            <p className="text-sm">{nomDe(c.participantA)} ↔ {nomDe(c.participantB)}</p>
           </Link>
         ))}
       </div>
