@@ -41,7 +41,14 @@ Deja couverts a part : US-12 caution, US-17 chiffrement, US-22 signature, US-24 
 | `regles.test.ts` | plafond caution 3 mois, penalite preavis < 30 j, restitution sans EDL sortie, contacts masques |
 | `regles-suite.test.ts` | publication refusee sous 3 photos, PARTIEL puis PAYEE, KYC VALIDE/REJETE, notifications non lues |
 
-Les pages React n'ont pas de test de composant.
+Ces regles sont branchees dans les ecrans (pas de code mort) :
+- `peutPublier` desactive Publier sous 3 photos (`BienDetailPage`).
+- `penaliteResiliation` estime la penalite (`ContratDetailPage`).
+- `contactsMasques` masque les contacts (`ContratDetailPage`).
+- `statutApresPaiement` affiche le statut et le reste a payer (`LoyersPage`).
+- `nonLues` compte les notifications (`AppShell`, `NotificationsPage`).
+
+Les pages React n'ont pas de test de composant. Prochaine passe possible : `@testing-library/react`.
 
 ## Hors perimetre (cles prestataire)
 - Wave / Orange Money live
