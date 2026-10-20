@@ -43,6 +43,9 @@ Deja couverts a part : US-12 caution, US-17 chiffrement, US-22 signature, US-24 
 | `PublishGate.test.tsx` | bouton Publier desactive sous 3 photos |
 | `NotifBadge.test.tsx` | compteur de notifications non lues |
 | `ContactsGate.test.tsx` | contacts masques tant que non reveles |
+| `PenaliteGate.test.tsx` | penalite si preavis < 30 jours |
+| `RestePayer.test.tsx` | statut PARTIEL / PAYEE et reste |
+| `KycGate.test.tsx` | decision KYC VALIDE / REJETE seulement |
 
 Setup : `@testing-library/react` + jsdom, tests exclus du `tsc -b`.
 
@@ -52,6 +55,8 @@ Ces regles sont branchees dans les ecrans (pas de code mort) :
 - `contactsMasques` masque les contacts (`ContratDetailPage`).
 - `statutApresPaiement` affiche le statut et le reste a payer (`LoyersPage`).
 - `nonLues` compte les notifications (`AppShell`, `NotificationsPage`).
+
+Toutes les regles pures branchees ont maintenant un test de composant.
 
 ## Hors perimetre (cles prestataire)
 - Wave / Orange Money live
