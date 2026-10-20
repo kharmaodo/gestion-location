@@ -32,6 +32,7 @@ import com.location.contrats.service.ContratService;
 import com.location.contrats.service.EtatLieuxService;
 import com.location.dashboard.service.AlerteService;
 import com.location.identites.repository.UtilisateurRepository;
+import com.location.identites.repository.UtilisateurRoleRepository;
 import com.location.litiges.dto.LitigeDecisionRequest;
 import com.location.litiges.repository.LitigeRepository;
 import com.location.litiges.service.LitigeService;
@@ -136,7 +137,12 @@ class LotUs09a29Test {
     @Test
     void us15MessageReserveAuxParticipants() {
         ConversationRepository conversations = mock(ConversationRepository.class);
-        MessagerieService service = new MessagerieService(conversations, mock(MessageRepository.class), mock(UtilisateurRepository.class), mock(MessageBus.class));
+        MessagerieService service = new MessagerieService(
+                conversations,
+                mock(MessageRepository.class),
+                mock(UtilisateurRepository.class),
+                mock(UtilisateurRoleRepository.class),
+                mock(MessageBus.class));
         UUID id = UUID.randomUUID();
         ConversationEntity c = new ConversationEntity();
         c.setParticipantA(UUID.randomUUID());
