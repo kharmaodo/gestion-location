@@ -9,7 +9,7 @@ FIN=$(date -d "+10 days" +%F 2>/dev/null || date -v+10d +%F)
 
 reg=$(curl -s -o /tmp/verrou-reg.json -w "%{http_code}" -X POST "$API/api/v1/auth/register" \
   -H "Content-Type: application/json" \
-  -d "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall\",\"consentementRgpd\":true}")
+  -d "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall${STAMP}\",\"consentementRgpd\":true}")
 [ "$reg" = "201" ] || { echo "KO register $reg"; exit 1; }
 TOKEN=$(curl -s -X POST "$API/api/v1/auth/login" -H "Content-Type: application/json" \
   -d "{\"identifiant\":\"$EMAIL\",\"motDePasse\":\"$PWD\"}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["accessToken"])')
@@ -28,10 +28,10 @@ done
 curl -s -o /dev/null -X PUT "$API/api/v1/biens/$BIEN_ID/unites/$UNITE_ID/publication" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d "{\"publie\":true}"
 ONE=$(curl -s -o /tmp/verrou-1.json -w "%{http_code}" -X POST "$API/api/v1/public/reservations" -H "Content-Type: application/json" \
-  -d "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Diop\",\"telephone\":\"770000000\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
+  -d "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Diop${STAMP}\",\"telephone\":\"770000000\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
 [ "$ONE" = "201" ] || { echo "KO premiere reservation $ONE"; exit 1; }
 echo "OK premiere reservation"
 TWO=$(curl -s -o /tmp/verrou-2.json -w "%{http_code}" -X POST "$API/api/v1/public/reservations" -H "Content-Type: application/json" \
-  -d "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ndiaye\",\"telephone\":\"770000001\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
+  -d "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ndiaye${STAMP}\",\"telephone\":\"770000001\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
 [ "$TWO" = "409" ] || { echo "KO seconde reservation (attendu 409, obtenu $TWO)"; cat /tmp/verrou-2.json; exit 1; }
 echo "OK verrou 24h 409"

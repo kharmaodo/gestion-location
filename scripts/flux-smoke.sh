@@ -9,10 +9,10 @@ B="flux.b.${STAMP}@test.sn"
 reg() {
   curl -s -o /tmp/flux-reg.json -w "%{http_code}" -X POST "$API/api/v1/auth/register" \
     -H "Content-Type: application/json" \
-    -d "{\"typeCompte\":\"$1\",\"email\":\"$2\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall\",\"consentementRgpd\":true}"
+    -d "{\"typeCompte\":\"$1\",\"email\":\"$2\",\"motDePasse\":\"$PWD\",\"prenom\":\"$3\",\"nom\":\"$4${STAMP}\",\"consentementRgpd\":true}"
 }
-[ "$(reg PROPRIETAIRE "$A")" = "201" ] || { echo "KO register A"; exit 1; }
-[ "$(reg LOCATAIRE "$B")" = "201" ] || { echo "KO register B"; exit 1; }
+[ "$(reg PROPRIETAIRE "$A" Awa Fall)" = "201" ] || { echo "KO register A"; exit 1; }
+[ "$(reg LOCATAIRE "$B" Ibra Diop)" = "201" ] || { echo "KO register B"; exit 1; }
 BID=$(python3 -c 'import json; print(json.load(open("/tmp/flux-reg.json")).get("userId",""))')
 TOKEN=$(curl -s -X POST "$API/api/v1/auth/login" -H "Content-Type: application/json" \
   -d "{\"identifiant\":\"$A\",\"motDePasse\":\"$PWD\"}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["accessToken"])')

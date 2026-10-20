@@ -6,7 +6,7 @@ EMAIL="v11.${STAMP}@test.sn"
 PWD="Motdepasse1"
 REG=$(curl -s -o /tmp/v11-reg.json -w "%{http_code}" -X POST "$API/api/v1/auth/register" \
   -H "Content-Type: application/json" \
-  -d "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall\",\"consentementRgpd\":true}")
+  -d "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall${STAMP}\",\"consentementRgpd\":true}")
 [ "$REG" = "201" ] || { echo "KO register $REG"; cat /tmp/v11-reg.json; exit 1; }
 TOKEN=$(curl -s -X POST "$API/api/v1/auth/login" -H "Content-Type: application/json" \
   -d "{\"identifiant\":\"$EMAIL\",\"motDePasse\":\"$PWD\"}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["accessToken"])')

@@ -8,12 +8,14 @@ Liste des ameliorations d'interface qui ne changent pas le contrat API.
 - Avant : saisie libre d'un UUID destinataire.
 - Apres : liste deroulante prenom + nom (+ email). La valeur envoyee reste l'UUID.
 - Endpoint : `GET /api/v1/conversations/destinataires` -> `{ id, prenom, nom, email }[]`.
-- Filtre : role oppose (proprietaire voit locataires, locataire voit proprietaires), statut ACTIF, nom non vide, dedoublonnage par email (les comptes smoke du meme email n'apparaissent qu'une fois).
+- Filtre : role oppose (proprietaire voit locataires, locataire voit proprietaires), statut ACTIF, nom non vide, dedoublonnage par email.
 - Contrat inchange : `POST /api/v1/conversations` avec `{ destinataireId }`.
 - La liste des conversations affiche les noms quand ils sont connus.
+- Smokes : prenom/nom uniques par run (`Fall${STAMP}`, `Diop${STAMP}`) dans `api-smoke.sh`, `jalon-smoke.sh`, `v11-smoke.sh`, `verrou-smoke.sh`, `canaux-smoke.sh`, `flux-smoke.sh`.
 
 ## A faire
 
 - Recherche dans le select destinataire si la liste grossit.
 - Limiter aux contreparties liees par un contrat ou un dossier.
 - Afficher le nom dans le detail d'une conversation, pas seulement dans la liste.
+- Purger les anciens comptes smoke en doublon (noms fixes deja en base).
