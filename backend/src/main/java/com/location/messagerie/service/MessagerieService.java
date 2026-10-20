@@ -2,6 +2,7 @@ package com.location.messagerie.service;
 
 import com.location.identites.entity.UtilisateurEntity;
 import com.location.identites.repository.UtilisateurRepository;
+import com.location.identites.repository.UtilisateurRoleRepository;
 import com.location.messagerie.dto.ConversationRequest;
 import com.location.messagerie.dto.ConversationResponse;
 import com.location.messagerie.dto.DestinataireResponse;
@@ -12,6 +13,8 @@ import com.location.messagerie.repository.ConversationRepository;
 import com.location.messagerie.repository.MessageRepository;
 import com.location.shared.exception.ApiException;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -23,16 +26,19 @@ public class MessagerieService {
     private final ConversationRepository conversations;
     private final MessageRepository messages;
     private final UtilisateurRepository utilisateurs;
+    private final UtilisateurRoleRepository roles;
     private final MessageBus bus;
 
     public MessagerieService(
             ConversationRepository conversations,
             MessageRepository messages,
             UtilisateurRepository utilisateurs,
+            UtilisateurRoleRepository roles,
             MessageBus bus) {
         this.conversations = conversations;
         this.messages = messages;
         this.utilisateurs = utilisateurs;
+        this.roles = roles;
         this.bus = bus;
     }
 
@@ -48,11 +54,17 @@ public class MessagerieService {
 
     @Transactional(readOnly = true)
     public List<DestinataireResponse> destinataires(UUID userId) {
-        return utilisateurs.findAll().stream()
+        String cible = roles.findByUtilisateurId(userId).stream()
+                .anyMatch(r -> "PROPRIETAIRE".equals(r.getRole())) ? "LOCATAIRE" : "PROPRIETAIRE";
+        LinkedHashMap<String, DestinataireResponse> uniques = new LinkedHashMap<>();
+        utilisateurs.findAll().stream()
                 .filter(u -> !userId.equals(u.getId()))
                 .filter(u -> "ACTIF".equals(u.getStatut()))
-                .map(this::toDestinataire)
-                .toList();
+                .filter(u -> roles.findByUtilisateurId(u.getId()).stream().anyMatch(r -> cible.equals(r.getRole())))
+                .filter(u -> !vide(u.getPrenom()) || !vide(u.getNom()))
+                .sorted(Comparator.comparing(UtilisateurEntity::getId))
+                .forEach(u -> uniques.putIfAbsent(cle(u), toDestinataire(u)));
+        return List.copyOf(uniques.values());
     }
 
     @Transactional
@@ -109,8 +121,12 @@ public class MessagerieService {
     }
 
     private DestinataireResponse toDestinataire(UtilisateurEntity u) {
-        String prenom = u.getPrenom() == null ? "" : u.getPrenom();
-        String nom = u.getNom() == null ? "" : u.getNom();
-        return new DestinataireResponse(u.getId(), prenom, nom);
+        return new DestinataireResponse(u.getId(), vide(u.getPrenom()) ? "" : u.getPrenom(), vide(u.getNom()) ? "" : u.getNom(), u.getEmail());
+    }
+
+    private static boolean vide(String s) { return s == null || s.isBlank(); }
+
+    private static String cle(UtilisateurEntity u) {
+        return u.getEmail() == null ? u.getId().toString() : u.getEmail().toLowerCase();
     }
 }
