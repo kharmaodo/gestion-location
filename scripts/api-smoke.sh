@@ -6,6 +6,10 @@ API="${API:-http://localhost:8080}"
 STAMP=$(date +%s)
 PRO_EMAIL="proprio.smoke.${STAMP}@test.sn"
 LOC_EMAIL="locataire.smoke.${STAMP}@test.sn"
+PRO_PRENOM="Awa"
+PRO_NOM="Fall${STAMP}"
+LOC_PRENOM="Ibra"
+LOC_NOM="Diop${STAMP}"
 PWD="Motdepasse1"
 FAIL=0
 
@@ -46,7 +50,7 @@ split_body_code "$OUT"
 expect "$CODE" 200 "GET /actuator/health"
 
 echo "== Register proprietaire"
-OUT=$(req POST /api/v1/auth/register "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$PRO_EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall\",\"consentementRgpd\":true}")
+OUT=$(req POST /api/v1/auth/register "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$PRO_EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"$PRO_PRENOM\",\"nom\":\"$PRO_NOM\",\"consentementRgpd\":true}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /auth/register proprio"
 
@@ -62,7 +66,7 @@ split_body_code "$OUT"
 expect "$CODE" 200 "GET /me"
 
 echo "== Register locataire"
-OUT=$(req POST /api/v1/auth/register "{\"typeCompte\":\"LOCATAIRE\",\"email\":\"$LOC_EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Ibra\",\"nom\":\"Diop\",\"consentementRgpd\":true}")
+OUT=$(req POST /api/v1/auth/register "{\"typeCompte\":\"LOCATAIRE\",\"email\":\"$LOC_EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"$LOC_PRENOM\",\"nom\":\"$LOC_NOM\",\"consentementRgpd\":true}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /auth/register locataire"
 LOC_TOKEN=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))")
@@ -102,7 +106,7 @@ expect "$CODE" 200 "PUT publication avec 3 photos"
 
 echo "== Visite (avant occupation)"
 CRENEAU=$(python3 -c "from datetime import datetime,timedelta,timezone; print((datetime.now(timezone.utc)+timedelta(days=2)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-OUT=$(req POST /api/v1/public/visites "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ibra\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"creneau\":\"$CRENEAU\"}")
+OUT=$(req POST /api/v1/public/visites "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"$LOC_PRENOM\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"creneau\":\"$CRENEAU\"}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /public/visites"
 VIS_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
@@ -128,7 +132,7 @@ expect "$CODE" 200 "GET /public/annonces/{id}"
 
 DEBUT=$(date +%F)
 FIN=$(date -d "+10 days" +%F 2>/dev/null || date -v+10d +%F)
-OUT=$(req POST /api/v1/public/reservations "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"Ibra\",\"telephone\":\"770000000\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
+OUT=$(req POST /api/v1/public/reservations "{\"uniteId\":\"$UNITE_ID\",\"nom\":\"$LOC_PRENOM\",\"telephone\":\"770000000\",\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /public/reservations"
 
@@ -144,7 +148,7 @@ split_body_code "$OUT"
 expect "$CODE" 409 "POST /avis doublon"
 
 echo "== Dossier locataire"
-OUT=$(req POST /api/v1/locataires "{\"nom\":\"Diop\",\"prenom\":\"Ibra\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"pieceType\":\"CNI\",\"pieceNumero\":\"123\"}" "$PRO_TOKEN")
+OUT=$(req POST /api/v1/locataires "{\"nom\":\"$LOC_NOM\",\"prenom\":\"$LOC_PRENOM\",\"telephone\":\"770000000\",\"email\":\"$LOC_EMAIL\",\"pieceType\":\"CNI\",\"pieceNumero\":\"123\"}" "$PRO_TOKEN")
 split_body_code "$OUT"
 expect "$CODE" 201 "POST /locataires"
 DOS_ID=$(printf '%s\n' "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")

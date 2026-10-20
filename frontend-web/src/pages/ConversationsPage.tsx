@@ -13,6 +13,7 @@ type Destinataire = {
   id: string;
   prenom: string;
   nom: string;
+  email?: string;
 };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -29,7 +30,8 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 
 function libelle(d: Destinataire): string {
   const nom = `${d.prenom} ${d.nom}`.trim();
-  return nom.length > 0 ? nom : d.id;
+  if (nom && d.email) return `${nom} · ${d.email}`;
+  return nom || d.email || d.id;
 }
 
 export function ConversationsPage() {

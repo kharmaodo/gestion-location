@@ -16,7 +16,7 @@ code_of() { printf '%s\n' "$1" | tail -n 1; }
 body_of() { printf '%s\n' "$1" | sed '$d'; }
 
 OUT=$(curl -sS -w "\n%{http_code}" -X POST "$API/api/v1/auth/register" -H "Content-Type: application/json" \
-  -d "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall\",\"consentementRgpd\":true}")
+  -d "{\"typeCompte\":\"PROPRIETAIRE\",\"email\":\"$EMAIL\",\"motDePasse\":\"$PWD\",\"prenom\":\"Awa\",\"nom\":\"Fall${STAMP}\",\"consentementRgpd\":true}")
 expect "$(code_of "$OUT")" 201 "register"
 OUT=$(curl -sS -w "\n%{http_code}" -X POST "$API/api/v1/auth/login" -H "Content-Type: application/json" \
   -d "{\"identifiant\":\"$EMAIL\",\"motDePasse\":\"$PWD\"}")
